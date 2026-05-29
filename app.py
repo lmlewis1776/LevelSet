@@ -8,7 +8,7 @@ import sqlite3
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'levelset-dev-secret-key-change-in-prod')
+app.secret_key = os.environ.get('SECRET_KEY', 'equity-engine-dev-secret-key-change-in-prod')
 
 # Database setup
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'levelsethq.db')
@@ -69,6 +69,12 @@ def init_db():
             FOREIGN KEY (report_id) REFERENCES reports(id)
         )
     ''')
+    
+    # Ensure plan column exists (for databases created before schema update)
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN plan TEXT DEFAULT \'free\'')
+    except:
+        pass  # Column already exists
     
     conn.commit()
     conn.close()
@@ -131,27 +137,74 @@ def about():
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
+    import random
+    
     if request.method == 'POST':
         name = request.form.get('name', '')
         email = request.form.get('email', '')
         subject = request.form.get('subject', '')
         message = request.form.get('message', '')
+        captcha_answer = request.form.get('captcha', '')
+        captcha_expected = session.get('captcha_answer', 0)
+        
+        # Verify CAPTCHA
+        if str(captcha_answer).strip() != str(captcha_expected).strip():
+            flash('Incorrect CAPTCHA answer. Please try again.', 'error')
+            # Generate new CAPTCHA
+            a = random.randint(3, 12)
+            b = random.randint(3, 12)
+            session['captcha_answer'] = a + b
+            session['captcha_question'] = f"What is {a} + {b}?"
+            return render_template('contact.html')
+        
+        # Store message in database
         conn = get_db()
-        conn.execute('CREATE TABLE IF NOT EXISTS contact_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-        conn.execute('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)', (name, email, subject, message))
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                subject TEXT,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.execute('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)',
+                     (name, email, subject, message))
         conn.commit()
         conn.close()
+        
         flash('Thank you for your message! We will get back to you soon.', 'success')
         return redirect(url_for('contact'))
+    
+    # Generate CAPTCHA for GET request
+    a = random.randint(3, 12)
+    b = random.randint(3, 12)
+    session['captcha_answer'] = a + b
+    session['captcha_question'] = f"What is {a} + {b}?"
+    
     return render_template('contact.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    import random
+    
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
         organization = request.form.get('organization', '')
+        captcha_answer = request.form.get('captcha', '')
+        captcha_expected = session.get('captcha_answer', 0)
+        
+        if str(captcha_answer).strip() != str(captcha_expected).strip():
+            flash('Incorrect CAPTCHA answer. Please try again.', 'error')
+            # Generate new CAPTCHA
+            a = random.randint(3, 12)
+            b = random.randint(3, 12)
+            session['captcha_answer'] = a + b
+            session['captcha_question'] = f"What is {a} + {b}?"
+            return render_template('signup.html')
         
         if not name or not email or not password:
             flash('All fields are required', 'error')
@@ -178,6 +231,12 @@ def signup():
         flash('Welcome to LevelSet!', 'success')
         return redirect(url_for('dashboard'), 303)
     
+    # Generate CAPTCHA for GET request
+    a = random.randint(3, 12)
+    b = random.randint(3, 12)
+    session['captcha_answer'] = a + b
+    session['captcha_question'] = f"What is {a} + {b}?"
+    
     return render_template('signup.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -185,6 +244,17 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        captcha_answer = request.form.get('captcha', '')
+        captcha_expected = session.get('captcha_answer', 0)
+        
+        if str(captcha_answer).strip() != str(captcha_expected).strip():
+            flash('Incorrect CAPTCHA answer. Please try again.', 'error')
+            # Generate new CAPTCHA
+            a = random.randint(3, 12)
+            b = random.randint(3, 12)
+            session['captcha_answer'] = a + b
+            session['captcha_question'] = f"What is {a} + {b}?"
+            return render_template('login.html')
         
         conn = get_db()
         user_data = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
@@ -198,6 +268,12 @@ def login():
             return redirect(url_for('dashboard'), 303)
         
         flash('Invalid email or password', 'error')
+    
+    # Generate CAPTCHA for GET request
+    a = random.randint(3, 12)
+    b = random.randint(3, 12)
+    session['captcha_answer'] = a + b
+    session['captcha_question'] = f"What is {a} + {b}?"
     
     return render_template('login.html')
 
@@ -221,7 +297,6 @@ def dashboard():
 @app.route('/dei-audit', methods=['GET', 'POST'])
 @login_required
 def dei_audit():
-    # Org Health Assessment questions across 5 dimensions
     dimensions = [
         {
             'id': 'hiring_access',
@@ -275,4 +350,467 @@ def dei_audit():
         }
     ]
     
+    max_possible = sum(len(d['questions']) * 2 for d in dimensions)
     
+    if request.method == 'POST':
+        answers = {}
+        score = 0
+        for dimension in dimensions:
+            for q in dimension['questions']:
+                ans = request.form.get(q['id'])
+                if ans is not None:
+                    val = int(ans)
+                    answers[q['id']] = val
+                    score += val
+        
+        # Calculate dimension scores
+        dim_scores = {}
+        for dimension in dimensions:
+            dim_total = 0
+            dim_max = len(dimension['questions']) * 2
+            for q in dimension['questions']:
+                if q['id'] in answers:
+                    dim_total += answers[q['id']]
+            dim_scores[dimension['id']] = {
+                'score': dim_total,
+                'max': dim_max,
+                'pct': round((dim_total / dim_max) * 100) if dim_max > 0 else 0
+            }
+        
+        overall_pct = round((score / max_possible) * 100) if max_possible > 0 else 0
+        
+        # Determine maturity level
+        if overall_pct >= 80:
+            maturity = 'Advanced'
+            color = '#22c55e'
+        elif overall_pct >= 55:
+            maturity = 'Developing'
+            color = '#eab308'
+        elif overall_pct >= 30:
+            maturity = 'Emerging'
+            color = '#f97316'
+        else:
+            maturity = 'Beginning'
+            color = '#ef4444'
+        
+        report_data = json.dumps({
+            'answers': answers,
+            'dimension_scores': dim_scores,
+            'overall_pct': overall_pct,
+            'maturity': maturity,
+            'max_possible': max_possible
+        })
+        
+        conn = get_db()
+        cursor = conn.execute(
+            'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
+            (current_user.id, 'dei_audit', f'Equitable Org Audit - {datetime.now().strftime("%b %d, %Y")}', 
+             report_data, score, max_possible)
+        )
+        conn.commit()
+        report_id = cursor.lastrowid
+        conn.close()
+        
+        return redirect(url_for('report_result', report_id=report_id), 303)
+    
+    return render_template('dei_audit.html', dimensions=dimensions)
+
+@app.route('/grant-checklist', methods=['GET', 'POST'])
+@login_required
+def grant_checklist():
+    categories = [
+        {
+            'id': 'talent_pathways',
+            'name': 'Talent Pathways & People Infrastructure',
+            'items': [
+                {'id': 'od1', 'text': 'Your job descriptions focus on skills and potential rather than credentials and years of experience'},
+                {'id': 'od2', 'text': 'You have a process for recognizing and advancing STARs (Skilled Through Alternative Routes) talent'},
+                {'id': 'od3', 'text': 'Your interview process is structured and consistent across all candidates'},
+                {'id': 'od4', 'text': 'You have clear position descriptions with salary transparency'},
+                {'id': 'od5', 'text': 'Staff and leadership reflect the communities you serve'},
+                {'id': 'od6', 'text': 'You have a professional development budget that is equitably accessible'},
+            ]
+        },
+        {
+            'id': 'equity_infrastructure',
+            'name': 'Equity Infrastructure & Accountability',
+            'items': [
+                {'id': 'fi1', 'text': 'Your mission and vision statements are current and genuinely reflect your equity commitments'},
+                {'id': 'fi2', 'text': 'You have a board of directors that reflects community diversity'},
+                {'id': 'fi3', 'text': 'You collect data on who you serve and who you\'re missing — and use it'},
+                {'id': 'fi4', 'text': 'Community voice is built into your governance or advisory structure'},
+                {'id': 'fi5', 'text': 'Your strategic plan includes measurable equity goals with dedicated funding'},
+                {'id': 'fi6', 'text': 'You have clear policies on equity, inclusion, and anti-discrimination with accountability mechanisms'},
+            ]
+        },
+        {
+            'id': 'mission_ops',
+            'name': 'Mission-Aligned Operations & Financial Health',
+            'items': [
+                {'id': 'pr1', 'text': 'You have a current annual budget tied to programmatic priorities'},
+                {'id': 'pr2', 'text': 'Your funding sources are diversified (no single source >50%)'},
+                {'id': 'pr3', 'text': 'You have clear accounting systems and internal controls'},
+                {'id': 'pr4', 'text': 'Your programs have a documented theory of change or logic model'},
+                {'id': 'pr5', 'text': 'You track measurable outcomes and impact data'},
+                {'id': 'pr6', 'text': 'Your financial practices are transparent and accessible to stakeholders'},
+            ]
+        },
+        {
+            'id': 'community_capacity',
+            'name': 'Community Connection & Capacity Building',
+            'items': [
+                {'id': 'st1', 'text': 'Your programs are designed with community input, not just for community consumption'},
+                {'id': 'st2', 'text': 'Your materials and services are accessible across language, ability, and culture'},
+                {'id': 'st3', 'text': 'You have community impact stories that center the voices of those you serve'},
+                {'id': 'st4', 'text': 'You partner with community-based organizations as equals, not just as referral sources'},
+                {'id': 'st5', 'text': 'You have a system for collecting feedback from the communities you serve'},
+                {'id': 'st6', 'text': 'Your volunteer and community engagement practices are equitable and reciprocal'},
+            ]
+        },
+        {
+            'id': 'readiness_tracking',
+            'name': 'Grant Readiness & Funding Strategy',
+            'items': [
+                {'id': 'gm1', 'text': 'You have a grant tracking system or calendar'},
+                {'id': 'gm2', 'text': 'You can produce audited financials or reviewed statements'},
+                {'id': 'gm3', 'text': 'Your IRS 501(c)(3) determination and incorporation docs are current'},
+                {'id': 'gm4', 'text': 'You have a standard grant proposal boilerplate (mission, approach, impact)'},
+                {'id': 'gm5', 'text': 'You have funder relationship management practices beyond just writing checks'},
+                {'id': 'gm6', 'text': 'You track which funding opportunities align with your mission vs. chasing every dollar'},
+            ]
+        }
+    ]
+    
+    if request.method == 'POST':
+        results = {}
+        total_items = 0
+        checked_items = 0
+        
+        for cat in categories:
+            cat_total = len(cat['items'])
+            cat_checked = 0
+            for item in cat['items']:
+                total_items += 1
+                if request.form.get(item['id']):
+                    cat_checked += 1
+                    checked_items += 1
+            results[cat['id']] = {
+                'checked': cat_checked,
+                'total': cat_total,
+                'pct': round((cat_checked / cat_total) * 100) if cat_total > 0 else 0
+            }
+        
+        overall_pct = round((checked_items / total_items) * 100) if total_items > 0 else 0
+        
+        if overall_pct >= 80:
+            readiness = 'Highly Ready'
+            color = '#22c55e'
+        elif overall_pct >= 55:
+            readiness = 'Moderately Ready'
+            color = '#eab308'
+        elif overall_pct >= 30:
+            readiness = 'Developing'
+            color = '#f97316'
+        else:
+            readiness = 'Needs Work'
+            color = '#ef4444'
+        
+        report_data = json.dumps({
+            'results': results,
+            'overall_pct': overall_pct,
+            'checked_items': checked_items,
+            'total_items': total_items,
+            'readiness': readiness
+        })
+        
+        conn = get_db()
+        cursor = conn.execute(
+            'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
+            (current_user.id, 'grant_checklist', 
+             f'Grant Readiness - {datetime.now().strftime("%b %d, %Y")}',
+             report_data, checked_items, total_items)
+        )
+        conn.commit()
+        report_id = cursor.lastrowid
+        conn.close()
+        
+        return redirect(url_for('report_result', report_id=report_id), 303)
+    
+    return render_template('grant_checklist.html', categories=categories)
+
+@app.route('/tech-assessment', methods=['GET', 'POST'])
+@login_required
+def tech_assessment():
+    categories = [
+        {
+            'id': 'infrastructure',
+            'name': 'Infrastructure & Equity',
+            'questions': [
+                {'id': 't1', 'text': 'Do you use cloud-based tools that are accessible to all staff regardless of device or location?', 'options': [('No/Limited', 0), ('Partially', 1), ('Yes, fully accessible', 2)]},
+                {'id': 't2', 'text': 'Is your data backed up securely and protected from loss?', 'options': [('No/Unsure', 0), ('Occasional backups', 1), ('Automated, tested backups', 2)]},
+                {'id': 't3', 'text': 'Do you have an IT security policy that includes protections for community data?', 'options': [('No', 0), ('Basic password policy', 1), ('Yes, comprehensive', 2)]},
+                {'id': 't4', 'text': 'Are your digital tools and platforms designed to be accessible to people with disabilities?', 'options': [('Not assessed', 0), ('Partially accessible', 1), ('Yes, WCAG-compliant', 2)]},
+            ]
+        },
+        {
+            'id': 'crm',
+            'name': 'Data, CRM & Community Insights',
+            'questions': [
+                {'id': 't5', 'text': 'Do you use a CRM or database that helps you understand who you serve and who you\'re missing?', 'options': [('Spreadsheets only', 0), ('Basic system', 1), ('Purpose-built with equity reporting', 2)]},
+                {'id': 't6', 'text': 'Can you generate reports that disaggregate data by race, income, geography, or other equity dimensions?', 'options': [('No', 0), ('With difficulty', 1), ('Easily and regularly', 2)]},
+                {'id': 't7', 'text': 'Do your data practices protect community agency — giving people control over their own information?', 'options': [('No/Unsure', 0), ('Basic privacy', 1), ('Yes, community data sovereignty', 2)]},
+                {'id': 't8', 'text': 'Do your tools integrate with each other, or do you spend time on manual data entry?', 'options': [('All manual', 0), ('Some integration', 1), ('Automated workflows', 2)]},
+            ]
+        },
+        {
+            'id': 'digital',
+            'name': 'Digital Presence & Equitable Engagement',
+            'questions': [
+                {'id': 't9', 'text': 'Is your website modern, mobile-friendly, and accessible to people with disabilities?', 'options': [('Outdated', 0), ('Basic', 1), ('Modern, accessible, tested', 2)]},
+                {'id': 't10', 'text': 'Do you use digital tools to engage the communities you serve in ways that work for them?', 'options': [('No/One-size-fits-all', 0), ('Some channels', 1), ('Multi-channel, community-informed', 2)]},
+                {'id': 't11', 'text': 'Is your website content available in languages your community speaks?', 'options': [('English only', 0), ('A few pages translated', 1), ('Multi-language by design', 2)]},
+                {'id': 't12', 'text': 'Do you track analytics that measure equitable reach — not just total traffic?', 'options': [('Basic page views', 0), ('Some demographic data', 1), ('Yes, equity-focused analytics', 2)]},
+            ]
+        },
+        {
+            'id': 'fundraising',
+            'name': 'Fundraising Tech & Financial Accessibility',
+            'questions': [
+                {'id': 't13', 'text': 'Do you accept online payments/donations through an accessible, user-friendly platform?', 'options': [('No/Outdated', 0), ('Basic form', 1), ('Integrated, accessible platform', 2)]},
+                {'id': 't14', 'text': 'Do you offer recurring giving or payment options that reduce barriers for supporters?', 'options': [('No', 0), ('Manual only', 1), ('Yes, automated and flexible', 2)]},
+                {'id': 't15', 'text': 'Do you use event or program management software that makes participation accessible?', 'options': [('No', 0), ('Basic tools', 1), ('Full-featured and inclusive', 2)]},
+                {'id': 't16', 'text': 'Are your payment and donation systems secure and trusted by the communities you serve?', 'options': [('Not sure', 0), ('Basic security', 1), ('Yes, certified and transparent', 2)]},
+            ]
+        }
+    ]
+    
+    max_possible = sum(len(c['questions']) * 2 for c in categories)
+    
+    if request.method == 'POST':
+        answers = {}
+        score = 0
+        for cat in categories:
+            for q in cat['questions']:
+                ans = request.form.get(q['id'])
+                if ans is not None:
+                    val = int(ans)
+                    answers[q['id']] = val
+                    score += val
+        
+        cat_scores = {}
+        for cat in categories:
+            cat_total = 0
+            cat_max = len(cat['questions']) * 2
+            for q in cat['questions']:
+                if q['id'] in answers:
+                    cat_total += answers[q['id']]
+            cat_scores[cat['id']] = {
+                'score': cat_total,
+                'max': cat_max,
+                'pct': round((cat_total / cat_max) * 100) if cat_max > 0 else 0
+            }
+        
+        overall_pct = round((score / max_possible) * 100) if max_possible > 0 else 0
+        
+        if overall_pct >= 80:
+            level = 'Tech-Forward'
+            color = '#22c55e'
+        elif overall_pct >= 55:
+            level = 'Tech-Competent'
+            color = '#eab308'
+        elif overall_pct >= 30:
+            level = 'Tech-Emerging'
+            color = '#f97316'
+        else:
+            level = 'Tech-Gap'
+            color = '#ef4444'
+        
+        report_data = json.dumps({
+            'answers': answers,
+            'category_scores': cat_scores,
+            'overall_pct': overall_pct,
+            'level': level,
+            'max_possible': max_possible
+        })
+        
+        conn = get_db()
+        cursor = conn.execute(
+            'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
+            (current_user.id, 'tech_assessment',
+             f'Tech Stack Assessment - {datetime.now().strftime("%b %d, %Y")}',
+             report_data, score, max_possible)
+        )
+        conn.commit()
+        report_id = cursor.lastrowid
+        conn.close()
+        
+        return redirect(url_for('report_result', report_id=report_id), 303)
+    
+    return render_template('tech_assessment.html', categories=categories)
+
+@app.route('/report/<int:report_id>')
+@login_required
+def report_result(report_id):
+    conn = get_db()
+    report = conn.execute(
+        'SELECT * FROM reports WHERE id = ? AND user_id = ?',
+        (report_id, current_user.id)
+    ).fetchone()
+    
+    # Check if this is a paid report or user has subscription
+    is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
+    
+    # Free users get a limited version for their first free report
+    free_used = False
+    if not is_paid and current_user.plan == 'free':
+        free_reports = conn.execute(
+            'SELECT COUNT(*) as cnt FROM payments WHERE user_id = ? AND amount = 0',
+            (current_user.id,)
+        ).fetchone()
+        if free_reports['cnt'] < 1:
+            is_paid = True  # First report is free
+    
+    conn.close()
+    
+    if not report:
+        flash('Report not found', 'error')
+        return redirect(url_for('dashboard'), 303)
+    
+    report_data = json.loads(report['data'])
+    
+    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid)
+
+@app.route('/pay/<int:report_id>', methods=['POST'])
+@login_required
+def pay_for_report(report_id):
+    conn = get_db()
+    report = conn.execute(
+        'SELECT * FROM reports WHERE id = ? AND user_id = ?',
+        (report_id, current_user.id)
+    ).fetchone()
+    
+    if not report:
+        conn.close()
+        return jsonify({'error': 'Report not found'}), 404
+    
+    if report['paid'] == 1:
+        conn.close()
+        return jsonify({'message': 'Already paid', 'redirect': url_for('report_result', report_id=report_id)})
+    
+    payment_id = request.json.get('payment_id', 'manual_' + str(datetime.now().timestamp()))
+    amount = 29.00  # Flat fee per report
+    
+    conn.execute(
+        'UPDATE reports SET paid = 1, payment_id = ? WHERE id = ?',
+        (payment_id, report_id)
+    )
+    conn.execute(
+        'INSERT INTO payments (user_id, report_id, amount, payment_id) VALUES (?, ?, ?, ?)',
+        (current_user.id, report_id, amount, payment_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'redirect': url_for('report_result', report_id=report_id)})
+
+@app.route('/subscribe', methods=['POST'])
+@login_required
+def subscribe():
+    payment_id = request.json.get('payment_id', 'sub_' + str(datetime.now().timestamp()))
+    
+    conn = get_db()
+    conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('subscription', current_user.id))
+    conn.execute(
+        'INSERT INTO payments (user_id, amount, payment_id) VALUES (?, ?, ?)',
+        (current_user.id, 29.00, payment_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    current_user.plan = 'subscription'
+    
+    return jsonify({'success': True, 'redirect': url_for('dashboard')})
+
+@app.route('/free-report/<int:report_id>')
+@login_required
+def free_report(report_id):
+    conn = get_db()
+    report = conn.execute(
+        'SELECT * FROM reports WHERE id = ? AND user_id = ?',
+        (report_id, current_user.id)
+    ).fetchone()
+    
+    if not report:
+        conn.close()
+        return jsonify({'error': 'Report not found'}), 404
+    
+    # Free users get 1 free report
+    free_count = conn.execute(
+        'SELECT COUNT(*) as cnt FROM payments WHERE user_id = ? AND amount = 0',
+        (current_user.id,)
+    ).fetchone()
+    
+    if free_count['cnt'] >= 1 and current_user.plan == 'free' and report['paid'] == 0:
+        conn.close()
+        return jsonify({'error': 'Free limit reached. Please purchase or subscribe.'}), 403
+    
+    conn.execute(
+        'UPDATE reports SET paid = 1 WHERE id = ?',
+        (report_id,)
+    )
+    conn.execute(
+        'INSERT INTO payments (user_id, report_id, amount, payment_id, status) VALUES (?, ?, 0, ?, ?)',
+        (current_user.id, report_id, 'free_' + str(datetime.now().timestamp()), 'free')
+    )
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'redirect': url_for('report_result', report_id=report_id)})
+
+# ——— Subscription Management ———
+@app.route('/manage-subscription')
+@login_required
+def manage_subscription():
+    return render_template('manage_subscription.html')
+
+@app.route('/cancel-subscription', methods=['POST'])
+@login_required
+def cancel_subscription():
+    conn = get_db()
+    conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('free', current_user.id))
+    conn.commit()
+    conn.close()
+    current_user.plan = 'free'
+    flash('Subscription cancelled. You\'ve been moved to the free plan.', 'info')
+    return redirect(url_for('dashboard'), 303)
+
+@app.route('/upgrade', methods=['POST'])
+@login_required
+def upgrade():
+    payment_id = request.json.get('payment_id', 'upgrade_' + str(datetime.now().timestamp()))
+    
+    conn = get_db()
+    conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('subscription', current_user.id))
+    conn.execute(
+        'INSERT INTO payments (user_id, amount, payment_id) VALUES (?, ?, ?)',
+        (current_user.id, 29.00, payment_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    current_user.plan = 'subscription'
+    
+    return jsonify({'success': True, 'redirect': url_for('dashboard')})
+
+# --- PayPal Webhook (basic IPN verification endpoint) ---
+@app.route('/paypal-webhook', methods=['POST'])
+def paypal_webhook():
+    # In production, verify the IPN/webhook signature
+    data = request.json
+    # Log the webhook for tracking
+    with open('paypal_webhooks.log', 'a') as f:
+        f.write(json.dumps(data) + '\n')
+    return jsonify({'status': 'ok'})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
