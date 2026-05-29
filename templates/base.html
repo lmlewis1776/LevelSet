@@ -33,6 +33,9 @@
                             {% if current_user.plan == 'subscription' %}
                             <a href="/manage-subscription">Manage Subscription</a>
                             {% endif %}
+                            {% if current_user.role == 'admin' %}
+                            <a href="/admin">Admin Panel</a>
+                            {% endif %}
                             <div class="dropdown-divider"></div>
                             <a href="/logout">Log Out</a>
                         </div>

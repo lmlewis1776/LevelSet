@@ -115,6 +115,72 @@ def inject_globals():
 
 # ========== ROUTES ==========
 
+import random
+
+# Readiness resources for assessment reports
+READINESS_RESOURCES = {
+    'high': [
+        {
+            'name': 'Human Rights Campaign (HRC) Workplace Equality',
+            'url': 'https://www.hrc.org/resources/buyers-guide-for-workplace-equality',
+            'description': 'HRC provides the Corporate Equality Index (CEI) — a national benchmarking tool for workplace policies and practices related to LGBTQ+ equality.'
+        },
+        {
+            'name': 'NAACP Resources',
+            'url': 'https://naacp.org/resources',
+            'description': 'NAACP offers resources on racial justice, civic engagement, and organizational equity practices.'
+        },
+        {
+            'name': 'Stanford Social Innovation Review',
+            'url': 'https://ssir.org/',
+            'description': 'Leading source of ideas and best practices for nonprofits and social enterprises.'
+        }
+    ],
+    'medium': [
+        {
+            'name': 'National Council of Nonprofits',
+            'url': 'https://www.councilofnonprofits.org/',
+            'description': 'Resources for nonprofit management best practices, capacity building, and organizational effectiveness.'
+        },
+        {
+            'name': 'Candid / GuideStar',
+            'url': 'https://candid.org/',
+            'description': 'Nonprofit data, profiles, and resources to help organizations build capacity and find funding.'
+        },
+        {
+            'name': 'TechSoup',
+            'url': 'https://www.techsoup.org/',
+            'description': 'Technology resources and donations for nonprofits to improve their tech infrastructure.'
+        }
+    ],
+    'basic': [
+        {
+            'name': 'Idealist',
+            'url': 'https://www.idealist.org/',
+            'description': 'Community of nonprofits, social enterprises, and changemakers with resources for capacity building.'
+        },
+        {
+            'name': 'NTEN: The Nonprofit Technology Network',
+            'url': 'https://www.nten.org/',
+            'description': 'Professional development and resources for nonprofit technology and digital strategy.'
+        },
+        {
+            'name': 'L. M. Lewis Consulting',
+            'url': 'https://lmlewisconsulting.com',
+            'description': 'Ready to go deeper? Book a consultation for personalized guidance on your organizational journey.'
+        }
+    ]
+}
+
+def get_readiness_level(score, max_score):
+    pct = round((score / max_score) * 100) if max_score > 0 else 0
+    if pct >= 70:
+        return 'high'
+    elif pct >= 40:
+        return 'medium'
+    else:
+        return 'basic'
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -137,8 +203,6 @@ def about():
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
-    import random
-    
     if request.method == 'POST':
         name = request.form.get('name', '')
         email = request.form.get('email', '')
@@ -187,8 +251,6 @@ def contact():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    import random
-    
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
@@ -678,7 +740,11 @@ def report_result(report_id):
     
     report_data = json.loads(report['data'])
     
-    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid)
+    # Determine readiness level and get resources
+    readiness_level = get_readiness_level(report['score'], report['max_score']) if report['max_score'] > 0 else 'basic'
+    resources = READINESS_RESOURCES.get(readiness_level, READINESS_RESOURCES['basic'])
+    
+    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid, resources=resources, readiness_level=readiness_level)
 
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
@@ -812,5 +878,51 @@ def paypal_webhook():
         f.write(json.dumps(data) + '\n')
     return jsonify({'status': 'ok'})
 
+def admin_required(f):
+    """Decorator to require admin role."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('Admin access required.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_panel():
+    conn = get_db()
+    messages = conn.execute(
+        'SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 50'
+    ).fetchall()
+    users = conn.execute(
+        'SELECT id, email, name, organization, role, plan, created_at FROM users ORDER BY created_at DESC LIMIT 50'
+    ).fetchall()
+    conn.close()
+    return render_template('admin_panel.html', messages=messages, users=users)
+
+# --- Seed Admin User ---
+def seed_admin():
+    """Create the admin account if it doesn't exist."""
+    conn = get_db()
+    existing = conn.execute('SELECT id FROM users WHERE email = ?', ('lashana@lmlewisconsulting.com',)).fetchone()
+    if not existing:
+        from werkzeug.security import generate_password_hash
+        password_hash = generate_password_hash('LevelSetAdmin2026!')
+        conn.execute(
+            'INSERT INTO users (email, password_hash, name, organization, role, plan) VALUES (?, ?, ?, ?, ?, ?)',
+            ('lashana@lmlewisconsulting.com', password_hash, 'LaShana Lewis', 'L. M. Lewis Consulting', 'admin', 'subscription')
+        )
+        conn.commit()
+        print('✓ Admin account created: lashana@lmlewisconsulting.com / LevelSetAdmin2026!')
+    else:
+        # Ensure existing user has admin role
+        conn.execute('UPDATE users SET role = ? WHERE email = ?', ('admin', 'lashana@lmlewisconsulting.com'))
+        conn.commit()
+        print('✓ Admin role confirmed for lashana@lmlewisconsulting.com')
+    conn.close()
+
 if __name__ == '__main__':
+    seed_admin()
     app.run(host='0.0.0.0', port=5000, debug=True)

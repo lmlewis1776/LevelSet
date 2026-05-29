@@ -119,6 +119,25 @@
                 </div>
             </div>
 
+            <!-- Readiness Resources -->
+            {% if resources %}
+            <div style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 0.75rem;">Resources & Next Steps</h3>
+                <p style="color: var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
+                    Based on your {% if readiness_level == 'high' %}strong{% elif readiness_level == 'medium' %}developing{% else %}early-stage{% endif %} results, here are resources to support your journey:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    {% for resource in resources %}
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">{{ resource.name }}</h4>
+                        <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">{{ resource.description }}</p>
+                        <a href="{{ resource.url }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Visit →</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Actions -->
             <div style="display:flex; gap:1rem; justify-content:center; margin-top: 2rem; flex-wrap:wrap;">
                 <a href="/{{ report.report_type|replace('dei_audit', 'dei-audit')|replace('grant_checklist', 'grant-checklist')|replace('tech_assessment', 'tech-assessment') }}" class="btn btn-primary">Run Again</a>
