@@ -1276,6 +1276,21 @@ footer {
     margin-bottom: 1rem;
 }
 
+/* ===== Skip Link ===== */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #0D0D0D;
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s;
+}
+.skip-link:focus {
+    top: 0;
+}
+
 /* Accessible focus styles */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
     outline: 2px solid var(--primary);

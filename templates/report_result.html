@@ -7,7 +7,7 @@
         <span class="report-type {{ report.report_type }}" style="margin-bottom:0.5rem; display:inline-block;">
             {{ report.report_type|replace('_', ' ')|title }}
         </span>
-        <h2>{{ report.title }}</h2>
+        <h1>{{ report.title }}</h1>
         <p style="color: var(--gray-500);">Created {{ report.created_at }}</p>
     </div>
 
@@ -49,7 +49,7 @@
 
             <!-- Dimension scores for Org Health Assessment -->
             {% if data.dimension_scores %}
-            <h3 style="margin-bottom: 1rem;">Dimension Breakdown</h3>
+            <h2 style="margin-bottom: 1rem;">Dimension Breakdown</h2>
             <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
                 {% for dim_id, dim_data in data.dimension_scores.items() %}
                 <div class="dimension-score">
@@ -67,7 +67,7 @@
 
             <!-- Category scores for Tech Assessment -->
             {% if data.category_scores %}
-            <h3 style="margin-bottom: 1rem;">Category Breakdown</h3>
+            <h2 style="margin-bottom: 1rem;">Category Breakdown</h2>
             <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
                 {% for cat_id, cat_data in data.category_scores.items() %}
                 <div class="dimension-score">
@@ -85,7 +85,7 @@
 
             <!-- Results for Grant Checklist -->
             {% if data.results %}
-            <h3 style="margin-bottom: 1rem;">Category Breakdown</h3>
+            <h2 style="margin-bottom: 1rem;">Category Breakdown</h2>
             <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
                 {% for cat_id, cat_data in data.results.items() %}
                 <div class="dimension-score">
@@ -103,7 +103,7 @@
 
             <!-- Recommendations -->
             <div style="margin-top: 2rem;">
-                <h3 style="margin-bottom: 0.75rem;">Recommendations</h3>
+                <h2 style="margin-bottom: 0.75rem;">Recommendations</h2>
                 <div style="background: #F5F3FF; border-left: 4px solid var(--primary); padding: 1rem 1.25rem; border-radius: 0 var(--radius) var(--radius) 0;">
                     <p style="font-size:0.95rem; color: var(--gray-700);">
                         {% if data.overall_pct >= 80 %}
@@ -122,7 +122,7 @@
             <!-- Readiness Resources -->
             {% if resources %}
             <div style="margin-top: 2rem;">
-                <h3 style="margin-bottom: 0.75rem;">Resources & Next Steps</h3>
+                <h2 style="margin-bottom: 0.75rem;">Resources <h3 style="margin-bottom: 0.75rem;">Resources & Next Steps</h3> Next Steps</h2>
                 <p style="color: var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
                     Based on your {% if readiness_level == 'high' %}strong{% elif readiness_level == 'medium' %}developing{% else %}early-stage{% endif %} results, here are resources to support your journey:
                 </p>

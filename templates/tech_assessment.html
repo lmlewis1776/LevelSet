@@ -5,14 +5,14 @@
 <section class="tool-page">
     <div class="tool-header">
         <span class="report-type tech_assessment">Tech Assessment</span>
-        <h2>Tech-Stack Assessment</h2>
+        <h1>Tech-Stack Assessment</h1>
         <p>Evaluate your organization's technology across 4 critical areas: Infrastructure, CRM & Data, Digital Presence, and Fundraising Tech.</p>
     </div>
 
     <form method="POST" action="/tech-assessment" id="tech-assessment-form">
         {% for category in categories %}
         <div class="tool-section">
-            <h3>{{ category.name }}</h3>
+            <h2>{{ category.name }}</h2>
             {% for question in category.questions %}
             <div class="question-item">
                 <p>{{ question.text }}</p>

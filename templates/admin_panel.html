@@ -6,7 +6,7 @@
     <div class="container">
         <div class="dashboard-header">
             <div>
-                <h2>Admin Panel</h2>
+                <h1>Admin Panel</h1>
                 <p style="color: var(--text-muted);">Welcome, {{ current_user.name }}. Manage users and contact submissions.</p>
             </div>
             <a href="/dashboard" class="btn btn-outline btn-sm">Back to Dashboard</a>
@@ -14,7 +14,7 @@
 
         <!-- Contact Messages -->
         <div class="tool-section">
-            <h3>Contact Form Submissions</h3>
+            <h2>Contact Form Submissions</h2>
             {% if messages %}
                 <div style="overflow-x: auto;">
                     <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
@@ -47,7 +47,7 @@
 
         <!-- User Registrations -->
         <div class="tool-section">
-            <h3>User Registrations</h3>
+            <h2>User Registrations</h2>
             {% if users %}
                 <div style="overflow-x: auto;">
                     <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">

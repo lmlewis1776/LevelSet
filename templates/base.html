@@ -12,6 +12,9 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <!-- Navigation -->
     <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="container">
@@ -51,7 +54,7 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="flash-messages">
+            <div class="flash-messages" aria-live="polite">
                 {% for category, message in messages %}
                     <div class="flash-message {{ category }}">{{ message }}</div>
                 {% endfor %}
@@ -60,7 +63,7 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main>
+    <main id="main-content" role="main">
         {% block content %}{% endblock %}
     </main>
 

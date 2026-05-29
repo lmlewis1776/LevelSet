@@ -5,14 +5,14 @@
 <section class="tool-page">
     <div class="tool-header">
         <span class="report-type grant_checklist">Grant Readiness</span>
-        <h2>Nonprofit Grant-Readiness Checklist</h2>
+        <h1>Nonprofit Grant-Readiness Checklist</h1>
         <p>Assess your organization's readiness across 5 key categories. Check off the items you have in place to see your readiness score and identify gaps.</p>
     </div>
 
     <form method="POST" action="/grant-checklist" class="checklist-form" id="grant-checklist-form">
         {% for category in categories %}
         <div class="tool-section">
-            <h3>{{ category.name }}</h3>
+            <h2>{{ category.name }}</h2>
             
             <div class="progress-bar-container">
                 <div class="progress-bar">

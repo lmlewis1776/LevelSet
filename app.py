@@ -923,6 +923,8 @@ def seed_admin():
         print('✓ Admin role confirmed for lashana@lmlewisconsulting.com')
     conn.close()
 
+# Call seed_admin at module level so it runs under gunicorn too
+seed_admin()
+
 if __name__ == '__main__':
-    seed_admin()
     app.run(host='0.0.0.0', port=5000, debug=True)

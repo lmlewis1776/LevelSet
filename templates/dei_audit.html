@@ -5,14 +5,14 @@
 <section class="tool-page">
     <div class="tool-header">
         <!-- type set via app.py -->
-        <h2>Org Health Maturity Self-Assessment</h2>
+        <h1>Org Health Self-Assessment</h1>
         <p>Evaluate your organization across 5 critical dimensions of Diversity, Equity, and Inclusion. Each dimension has 4 questions. Answer honestly for the most accurate results.</p>
     </div>
 
     <form method="POST" action="/dei-audit" id="dei-audit-form">
         {% for dimension in dimensions %}
         <div class="tool-section">
-            <h3>{{ dimension.name }}</h3>
+            <h2>{{ dimension.name }}</h2>
             {% for question in dimension.questions %}
             <div class="question-item">
                 <p>{{ question.text }}</p>
