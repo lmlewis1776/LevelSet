@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LevelSet — Org health assessments, grant-readiness checklists, and tech-stack assessments for nonprofits and startups.">
+    <title>{% block title %}LevelSet — Organizational Health & Impact Tools{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <a href="/" class="navbar-brand">
+                <img src="{{ url_for('static', filename='img/levelset-logo.png') }}" alt="LevelSet Logo" onerror="this.style.display='none'">
+                <span>LevelSet</span>
+            </a>
+            <div class="navbar-links">
+                <a href="/">Home</a>
+                <a href="/pricing">Pricing</a>
+                {% if current_user.is_authenticated %}
+                    <a href="/dashboard">Dashboard</a>
+                    <div class="user-menu">
+                        <div class="user-avatar">{{ current_user.name[0]|upper }}</div>
+                        <span class="user-name">{{ current_user.name.split()[0] }}</span>
+                        <div class="dropdown-menu">
+                            <a href="/dashboard">Dashboard</a>
+                            <a href="/pricing">Pricing & Plans</a>
+                            {% if current_user.plan == 'subscription' %}
+                            <a href="/manage-subscription">Manage Subscription</a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="/logout">Log Out</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="/login">Log In</a>
+                    <a href="/signup" class="cta-button">Get Started Free</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>LevelSet</h4>
+                <p>Making DEI consulting affordable for nonprofits and startups. Powered by L. M. Lewis Consulting.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Tools</h4>
+                <a href="/dei-audit">DEI Audit</a><br>
+                <a href="/grant-checklist">Grant Readiness</a><br>
+                <a href="/tech-assessment">Tech Assessment</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="/pricing">Pricing</a><br>
+                <a href="#">About</a><br>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <a href="#">Privacy Policy</a><br>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; {{ current_year }} L. M. Lewis Consulting. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'

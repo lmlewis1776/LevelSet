@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Manage Subscription — LevelSet{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+    <div class="container" style="max-width: 600px;">
+        <div class="subscription-status" style="margin-bottom: 2rem;">
+            <h2>Subscription Management</h2>
+            <div class="plan-name" style="margin-top: 1.5rem;">
+                {% if current_user.plan == 'subscription' %}
+                    <span style="color: var(--secondary);">✓ Active Subscription</span>
+                {% else %}
+                    <span style="color: var(--gray-500);">Free Plan</span>
+                {% endif %}
+            </div>
+            <div class="plan-price">
+                {% if current_user.plan == 'subscription' %}
+                    $49<span style="font-size: 1rem; color: var(--gray-500);">/month</span>
+                {% else %}
+                    $0<span style="font-size: 1rem; color: var(--gray-500);">/month</span>
+                {% endif %}
+            </div>
+            <p style="color: var(--gray-500);">
+                {% if current_user.plan == 'subscription' %}
+                    Your subscription gives you unlimited access to all assessment tools and detailed reports.
+                {% else %}
+                    Upgrade to unlock unlimited assessments and detailed scored reports.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if current_user.plan == 'subscription' %}
+            <div style="background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 1.5rem;">
+                <h3 style="margin-bottom: 1rem;">Plan Details</h3>
+                <div style="margin-bottom: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); display:flex; justify-content:space-between;">
+                    <span style="color: var(--gray-600);">Plan</span>
+                    <span style="font-weight: 600;">Monthly Subscription</span>
+                </div>
+                <div style="margin-bottom: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); display:flex; justify-content:space-between;">
+                    <span style="color: var(--gray-600);">Price</span>
+                    <span style="font-weight: 600;">$49.00/month</span>
+                </div>
+                <div style="margin-bottom: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); display:flex; justify-content:space-between;">
+                    <span style="color: var(--gray-600);">Status</span>
+                    <span style="font-weight: 600; color: var(--secondary);">Active</span>
+                </div>
+
+                <form method="POST" action="/cancel-subscription" onsubmit="return confirm('Are you sure you want to cancel your subscription? You will lose access to unlimited reports.');">
+                    <button type="submit" class="btn btn-danger" style="width:100%;">Cancel Subscription</button>
+                </form>
+                <p style="text-align:center; font-size:0.85rem; color:var(--gray-500); margin-top:0.75rem;">
+                    You can re-subscribe at any time. Your data will be preserved.
+                </p>
+            </div>
+        {% else %}
+            <div style="background: #F5F3FF; border: 2px solid var(--primary); border-radius: var(--radius-lg); padding: 2rem; text-align: center;">
+                <h3 style="margin-bottom: 0.5rem;">Upgrade to Subscription</h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem;">
+                    Get unlimited access to all tools and detailed reports for just $49/month.
+                </p>
+                <div id="paypal-button-container" data-paypal-button="upgrade" data-amount="49.00"></div>
+                <p style="font-size:0.85rem; color:var(--gray-500); margin-top:0.75rem;">
+                    Cancel anytime. Your data is always preserved.
+                </p>
+            </div>
+        {% endif %}
+
+        <div style="text-align:center; margin-top: 2rem;">
+            <a href="/dashboard" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD" data-sdk-integration-source="button-factory"></script>
+{% endblock %}

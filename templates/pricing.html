@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Pricing — LevelSet{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 3rem;">
+    <div class="container">
+        <div class="section-title">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Get the insights you need at a price you can afford. Powered by L. M. Lewis Consulting.</p>
+        </div>
+        <div class="pricing-grid" style="margin-bottom: 3rem;">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0<span>/month</span></div>
+                <p class="description">Try before you buy — no risk</p>
+                <ul class="pricing-features">
+                    <li>1 free self-assessment report</li>
+                    <li>Basic checklist tools</li>
+                    <li>Email support</li>
+                    <li class="disabled">Detailed scored results</li>
+                    <li class="disabled">Unlimited reports</li>
+                    <li class="disabled">Priority support</li>
+                </ul>
+                {% if current_user.is_authenticated %}
+                    <p style="color: var(--gray-500); font-size:0.9rem;">You're on the Free plan</p>
+                {% else %}
+                    <a href="/signup" class="btn btn-outline" style="width:100%;">Get Started Free</a>
+                {% endif %}
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-badge">Most Popular</div>
+                <h3>Pay-Per-Report</h3>
+                <div class="price">$49<span>/report</span></div>
+                <p class="description">Pay only when you need a detailed report</p>
+                <ul class="pricing-features">
+                    <li>Detailed scored report</li>
+                    <li>Dimension-by-dimension breakdown</li>
+                    <li>Actionable recommendations</li>
+                    <li>Downloadable results</li>
+                    <li>Pay only when you need it</li>
+                    <li class="disabled">Unlimited reports</li>
+                </ul>
+                {% if current_user.is_authenticated %}
+                    <p style="color: var(--gray-500); font-size:0.9rem;">Available on any plan</p>
+                {% else %}
+                    <a href="/signup" class="btn btn-primary" style="width:100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <div class="pricing-card">
+                <h3>Subscription</h3>
+                <div class="price">$49<span>/month</span></div>
+                <p class="description">Best value for regular use</p>
+                <ul class="pricing-features">
+                    <li>Unlimited assessments</li>
+                    <li>All scored reports unlocked</li>
+                    <li>Track progress over time</li>
+                    <li>Downloadable PDFs</li>
+                    <li>Priority email support</li>
+                    <li>Cancel anytime</li>
+                </ul>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.plan == 'subscription' %}
+                        <p style="color: var(--secondary); font-weight:600;">✓ You're subscribed!</p>
+                    {% else %}
+                        <div id="paypal-button-container" data-paypal-button="upgrade" data-amount="49.00"></div>
+                    {% endif %}
+                {% else %}
+                    <a href="/signup" class="btn btn-secondary" style="width:100%;">Subscribe Now</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div style="max-width: 700px; margin: 0 auto;">
+            <h3 style="text-align:center; margin-bottom: 2rem;">Frequently Asked Questions</h3>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">What do I get with the free plan?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">You get one free self-assessment report of your choice. After that, you can purchase individual reports for $49 each or subscribe for unlimited access.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Can I switch plans later?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Absolutely! You can upgrade from Free to Subscription at any time, or cancel your subscription and move back to Free.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">How are the assessments scored?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Each assessment uses a weighted scoring system across multiple dimensions. Your results include an overall score, dimension-by-dimension breakdown, and actionable recommendations.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Who is behind LevelSet?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">LevelSet is powered by L. M. Lewis Consulting, bringing 15+ years of DEI and nonprofit consulting expertise into an affordable SaaS platform.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Is my data secure?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Yes. All assessment data is encrypted and stored securely. We never share your organization's data with third parties.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD" data-sdk-integration-source="button-factory"></script>
+{% endblock %}

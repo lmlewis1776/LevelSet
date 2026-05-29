@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Sign Up — LevelSet{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h2>Create Your Account</h2>
+        <p class="subtitle">Start building a more equitable organization today.</p>
+        
+        <form method="POST" action="/signup" data-validate>
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" required placeholder="Your full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="you@organization.org">
+            </div>
+            
+            <div class="form-group">
+                <label for="organization">Organization</label>
+                <input type="text" id="organization" name="organization" class="form-control" placeholder="Your nonprofit or company name">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required minlength="6" placeholder="At least 6 characters">
+                <div class="form-hint">Must be at least 6 characters</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
+        </form>
+        
+        <p style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--gray-500);">
+            Already have an account? <a href="/login">Log In</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

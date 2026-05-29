@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Org Health Assessment — LevelSet{% endblock %}
+
+{% block content %}
+<section class="tool-page">
+    <div class="tool-header">
+        <span class="report-type dei_audit">Org Health Assessment</span>
+        <h2>Org Health Maturity Self-Assessment</h2>
+        <p>Evaluate your organization across 5 critical dimensions of Diversity, Equity, and Inclusion. Each dimension has 4 questions. Answer honestly for the most accurate results.</p>
+    </div>
+
+    <form method="POST" action="/dei-audit" id="dei-audit-form">
+        {% for dimension in dimensions %}
+        <div class="tool-section">
+            <h3>{{ dimension.name }}</h3>
+            {% for question in dimension.questions %}
+            <div class="question-item">
+                <p>{{ question.text }}</p>
+                <div class="options">
+                    {% for option_text, option_value in question.options %}
+                    <label class="option-label">
+                        <input type="radio" name="{{ question.id }}" value="{{ option_value }}" required>
+                        <span>{{ option_text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div style="text-align:center; margin-top:2rem;">
+            <button type="submit" class="btn btn-primary btn-lg">Generate My Org Health Assessment Report</button>
+            <p style="color:var(--gray-500); font-size:0.85rem; margin-top:0.75rem;">
+                Your first report is free. Detailed results are $49 per report or included in the $49/month subscription.
+            </p>
+        </div>
+    </form>
+</section>
+{% endblock %}

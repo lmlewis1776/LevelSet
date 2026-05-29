@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Report — LevelSet{% endblock %}
+
+{% block content %}
+<section class="report-result">
+    <div class="result-header">
+        <span class="report-type {{ report.report_type }}" style="margin-bottom:0.5rem; display:inline-block;">
+            {{ report.report_type|replace('_', ' ')|title }}
+        </span>
+        <h2>{{ report.title }}</h2>
+        <p style="color: var(--gray-500);">Created {{ report.created_at }}</p>
+    </div>
+
+    {% if is_paid %}
+        <!-- Full detailed results -->
+        <div style="background: var(--white); border-radius: var(--radius-xl); border: 1px solid var(--gray-200); padding: 2rem; margin-bottom: 2rem;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="result-score">{{ data.overall_pct }}%</div>
+                <div class="result-label">Overall Score</div>
+                {% if data.maturity %}
+                <div class="maturity-badge" style="background: {{ '#22c55e' if data.maturity == 'Advanced' else '#eab308' if data.maturity == 'Developing' else '#f97316' if data.maturity == 'Emerging' else '#ef4444' }}; color: white;">
+                    {{ data.maturity }}
+                </div>
+                {% endif %}
+                {% if data.readiness %}
+                <div class="maturity-badge" style="background: {{ '#22c55e' if data.readiness == 'Highly Ready' else '#eab308' if data.readiness == 'Moderately Ready' else '#f97316' if data.readiness == 'Developing' else '#ef4444' }}; color: white;">
+                    {{ data.readiness }}
+                </div>
+                {% endif %}
+                {% if data.level %}
+                <div class="maturity-badge" style="background: {{ '#22c55e' if data.level == 'Tech-Forward' else '#eab308' if data.level == 'Tech-Competent' else '#f97316' if data.level == 'Tech-Emerging' else '#ef4444' }}; color: white;">
+                    {{ data.level }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Progress bar -->
+            <div class="progress-bar-container" style="margin-bottom: 2rem;">
+                <div class="progress-bar" style="height: 16px;">
+                    <div class="progress-fill" style="width: {{ data.overall_pct }}%; background: 
+                        {% if data.overall_pct >= 80 %}#22c55e{% elif data.overall_pct >= 55 %}#eab308{% elif data.overall_pct >= 30 %}#f97316{% else %}#ef4444{% endif %};">
+                    </div>
+                </div>
+                <div class="progress-label">
+                    <span>{{ data.overall_pct }}% Complete</span>
+                    <span>{{ report.score }} / {{ report.max_score }} points</span>
+                </div>
+            </div>
+
+            <!-- Dimension scores for DEI Audit -->
+            {% if data.dimension_scores %}
+            <h3 style="margin-bottom: 1rem;">Dimension Breakdown</h3>
+            <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
+                {% for dim_id, dim_data in data.dimension_scores.items() %}
+                <div class="dimension-score">
+                    <span class="dim-name">{{ dim_id|replace('_', ' ')|title }}</span>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div style="width: 120px; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                            <div style="width: {{ dim_data.pct }}%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
+                        </div>
+                        <span class="dim-value">{{ dim_data.score }}/{{ dim_data.max }} ({{ dim_data.pct }}%)</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Category scores for Tech Assessment -->
+            {% if data.category_scores %}
+            <h3 style="margin-bottom: 1rem;">Category Breakdown</h3>
+            <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
+                {% for cat_id, cat_data in data.category_scores.items() %}
+                <div class="dimension-score">
+                    <span class="dim-name">{{ cat_id|replace('_', ' ')|title }}</span>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div style="width: 120px; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                            <div style="width: {{ cat_data.pct }}%; height: 100%; background: var(--secondary); border-radius: 4px;"></div>
+                        </div>
+                        <span class="dim-value">{{ cat_data.score }}/{{ cat_data.max }} ({{ cat_data.pct }}%)</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Results for Grant Checklist -->
+            {% if data.results %}
+            <h3 style="margin-bottom: 1rem;">Category Breakdown</h3>
+            <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
+                {% for cat_id, cat_data in data.results.items() %}
+                <div class="dimension-score">
+                    <span class="dim-name">{{ cat_id|replace('_', ' ')|title }}</span>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div style="width: 120px; height: 8px; background: var(--gray-200); border-radius: 4px;">
+                            <div style="width: {{ cat_data.pct }}%; height: 100%; background: {{ '#22c55e' if cat_data.pct >= 80 else '#eab308' if cat_data.pct >= 55 else '#f97316' if cat_data.pct >= 30 else '#ef4444' }}; border-radius: 4px;"></div>
+                        </div>
+                        <span class="dim-value">{{ cat_data.checked }}/{{ cat_data.total }} ({{ cat_data.pct }}%)</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Recommendations -->
+            <div style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 0.75rem;">Recommendations</h3>
+                <div style="background: #F5F3FF; border-left: 4px solid var(--primary); padding: 1rem 1.25rem; border-radius: 0 var(--radius) var(--radius) 0;">
+                    <p style="font-size:0.95rem; color: var(--gray-700);">
+                        {% if data.overall_pct >= 80 %}
+                            <strong>Excellent work!</strong> Your organization is in a strong position. Focus on maintaining your momentum and sharing best practices with peers. Consider conducting these assessments quarterly to track progress.
+                        {% elif data.overall_pct >= 55 %}
+                            <strong>Good foundation established.</strong> You have key elements in place but there are clear opportunities for growth. Prioritize the lowest-scoring dimensions and set specific, measurable goals for improvement over the next 6 months.
+                        {% elif data.overall_pct >= 30 %}
+                            <strong>You're on the right track.</strong> Focus on building the fundamentals first — policy, leadership buy-in, and basic data collection. Small, consistent steps will build momentum.
+                        {% else %}
+                            <strong>Starting from strong intentions.</strong> The most impactful first step is securing leadership commitment and developing a clear DEI/grant/tech strategy. Consider starting with one or two high-impact areas.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap:1rem; justify-content:center; margin-top: 2rem; flex-wrap:wrap;">
+                <a href="/{{ report.report_type|replace('dei_audit', 'dei-audit')|replace('grant_checklist', 'grant-checklist')|replace('tech_assessment', 'tech-assessment') }}" class="btn btn-primary">Run Again</a>
+                <a href="/dashboard" class="btn btn-outline">Back to Dashboard</a>
+                <button onclick="window.print()" class="btn btn-secondary">Print Report</button>
+            </div>
+        </div>
+    {% else %}
+        <!-- Locked - payment required -->
+        <div class="locked-overlay">
+            <div class="locked-icon">🔒</div>
+            <h3>Unlock Your Detailed Report</h3>
+            <p>Your assessment has been recorded! Unlock the full scored report with detailed breakdowns and actionable recommendations.</p>
+            
+            <div class="pricing-options">
+                <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1.5rem; min-width: 200px;">
+                    <h4 style="margin-bottom: 0.5rem;">Single Report</h4>
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">$49</div>
+                    <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom: 1rem;">One-time payment</p>
+                    <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ report.id }}" data-amount="49.00"></div>
+                    {% if current_user.plan == 'free' %}
+                    <button onclick="claimFreeReport({{ report.id }})" class="btn btn-outline btn-sm" style="margin-top: 0.5rem; width:100%;">
+                        Use My Free Report
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <div style="background: #F5F3FF; border: 2px solid var(--primary); border-radius: var(--radius-lg); padding: 1.5rem; min-width: 200px;">
+                    <h4 style="margin-bottom: 0.5rem;">Subscription</h4>
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">$49<span style="font-size:0.9rem;">/mo</span></div>
+                    <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom: 1rem;">Unlimited reports</p>
+                    {% if current_user.plan == 'subscription' %}
+                        <p style="color: var(--secondary); font-weight: 600;">✓ Included in your plan</p>
+                    {% else %}
+                        <div id="paypal-button-container-upgrade" data-paypal-button="upgrade" data-amount="49.00"></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD" data-sdk-integration-source="button-factory"></script>
+{% endblock %}

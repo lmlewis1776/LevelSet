@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Grant Readiness — LevelSet{% endblock %}
+
+{% block content %}
+<section class="tool-page">
+    <div class="tool-header">
+        <span class="report-type grant_checklist">Grant Readiness</span>
+        <h2>Nonprofit Grant-Readiness Checklist</h2>
+        <p>Assess your organization's readiness across 5 key categories. Check off the items you have in place to see your readiness score and identify gaps.</p>
+    </div>
+
+    <form method="POST" action="/grant-checklist" class="checklist-form" id="grant-checklist-form">
+        {% for category in categories %}
+        <div class="tool-section">
+            <h3>{{ category.name }}</h3>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:0%; background: var(--secondary);"></div>
+                </div>
+                <div class="progress-label">
+                    <span class="progress-text">0 / {{ category.items|length }} (0%)</span>
+                    <span>{{ category.items|length }} items</span>
+                </div>
+            </div>
+            
+            {% for item in category.items %}
+            <div class="checklist-item">
+                <input type="checkbox" id="{{ item.id }}" name="{{ item.id }}" value="1">
+                <label for="{{ item.id }}">
+                    <span>{{ item.text }}</span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div style="text-align:center; margin-top:2rem;">
+            <button type="submit" class="btn btn-primary btn-lg">Generate My Grant Readiness Report</button>
+            <p style="color:var(--gray-500); font-size:0.85rem; margin-top:0.75rem;">
+                Your first report is free. Detailed results are $49 per report or included in the $49/month subscription.
+            </p>
+        </div>
+    </form>
+</section>
+{% endblock %}

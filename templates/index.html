@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}LevelSet — Organizational Health & Impact Tools{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Equity-Driven Tools for<br>Mission-Driven Organizations</h1>
+        <p>AI-powered DEI audits, grant-readiness checklists, and tech-stack assessments — built for nonprofits and startups who can't afford $200/hr consultants.</p>
+        <div class="hero-buttons">
+            <a href="/signup" class="btn btn-white btn-lg">Get Started Free</a>
+            <a href="/pricing" class="btn btn-outline-white btn-lg">See Pricing</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section" id="features">
+    <div class="container">
+        <div class="section-title">
+            <h2>Everything You Need to Assess &amp; Grow</h2>
+            <p>Three powerful self-assessment tools that give you the insights you'd get from a high-priced consultant.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="background: #EDE9FE; color: #6D28D9;">📋</div>
+                <h3>DEI Audit</h3>
+                <p>Self-assess your organization across 5 dimensions: Leadership, Workforce, Culture, Programs, and Accountability. Get a scored report with actionable recommendations.</p>
+                <a href="/dei-audit" class="btn btn-primary btn-sm mt-2">Start Audit</a>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: #D1FAE5; color: #047857;">✅</div>
+                <h3>Grant-Readiness Checklist</h3>
+                <p>Evaluate your nonprofit's readiness across 5 categories: Org Documents, Financials, Programs, Staffing, and Grant Management. See where you stand before applying.</p>
+                <a href="/grant-checklist" class="btn btn-primary btn-sm mt-2">Start Checklist</a>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: #DBEAFE; color: #1D4ED8;">💻</div>
+                <h3>Tech-Stack Assessment</h3>
+                <p>Evaluate your technology infrastructure, CRM, digital presence, and fundraising tech. Get a maturity score and prioritized upgrade recommendations.</p>
+                <a href="/tech-assessment" class="btn btn-primary btn-sm mt-2">Start Assessment</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats / Trust Banner -->
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-title">
+            <h2>Built on Real Consulting Expertise</h2>
+            <p>LevelSet packages years of organizational health consulting experience into an affordable SaaS platform.</p>
+        </div>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); text-align: center;">
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">100+</div>
+                <p style="color: var(--gray-500);">Nonprofits Served</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">15+</div>
+                <p style="color: var(--gray-500);">Years DEI Experience</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">$19</div>
+                <p style="color: var(--gray-500);">Starting Price Per Report</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">95%</div>
+                <p style="color: var(--gray-500);">Client Satisfaction</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Preview -->
+<section class="section" id="pricing">
+    <div class="container">
+        <div class="section-title">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Get the insights you need at a price you can afford. No hidden fees, no long-term contracts.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0<span>/month</span></div>
+                <p class="description">Get started with a basic assessment</p>
+                <ul class="pricing-features">
+                    <li>1 free self-assessment report</li>
+                    <li>Basic checklist tools</li>
+                    <li>Email support</li>
+                    <li class="disabled">Detailed scored results</li>
+                    <li class="disabled">Unlimited reports</li>
+                    <li class="disabled">Priority support</li>
+                </ul>
+                <a href="/signup" class="btn btn-outline" style="width:100%;">Get Started Free</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-badge">Most Popular</div>
+                <h3>Pay-Per-Report</h3>
+                <div class="price">$49<span>/report</span></div>
+                <p class="description">Unlock detailed scored results for any assessment</p>
+                <ul class="pricing-features">
+                    <li>Detailed scored report</li>
+                    <li>Dimension-by-dimension breakdown</li>
+                    <li>Actionable recommendations</li>
+                    <li>Downloadable PDFs</li>
+                    <li>Pay only when you need it</li>
+                    <li class="disabled">Unlimited reports</li>
+                </ul>
+                <a href="/signup" class="btn btn-primary" style="width:100%;">Get Started</a>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Subscription</h3>
+                <div class="price">$49<span>/month</span></div>
+                <p class="description">Unlimited access to all tools and reports</p>
+                <ul class="pricing-features">
+                    <li>Unlimited assessments</li>
+                    <li>All scored reports unlocked</li>
+                    <li>Track progress over time</li>
+                    <li>Downloadable PDFs</li>
+                    <li>Priority email support</li>
+                    <li>Cancel anytime</li>
+                </ul>
+                <a href="/signup" class="btn btn-secondary" style="width:100%;">Subscribe Now</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section section-dark" style="text-align:center;">
+    <div class="container">
+        <h2 style="color:var(--white); margin-bottom: 1rem;">Ready to Transform Your Organization?</h2>
+        <p style="color: var(--gray-400); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Join hundreds of nonprofits and startups using LevelSet to build more equitable, effective organizations.
+        </p>
+        <a href="/signup" class="btn btn-white btn-lg">Create Your Free Account</a>
+    </div>
+</section>
+{% endblock %}
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'
+/home/engine/.bashrc: line 1: syntax error near unexpected token `('
+/home/engine/.bashrc: line 1: `. /etc/profile.d/workload-containment.shn# ~/.bashrc: executed by bash(1) for non-login shells.'

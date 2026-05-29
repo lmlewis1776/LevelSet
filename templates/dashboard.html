@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — LevelSet{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h2>Welcome, {{ current_user.name }}!</h2>
+                <p style="color: var(--gray-500);">
+                    Plan: <span class="badge badge-{{ current_user.plan }}">{{ current_user.plan|capitalize }}</span>
+                    {% if current_user.plan == 'subscription' %}
+                    — <a href="/manage-subscription" style="font-size:0.85rem;">Manage</a>
+                    {% endif %}
+                </p>
+            </div>
+            <a href="/pricing" class="btn btn-outline btn-sm">
+                {% if current_user.plan == 'subscription' %}Plan Details{% else %}Upgrade Plan{% endif %}
+            </a>
+        </div>
+
+        <!-- Quick Actions -->
+        <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="/dei-audit" class="quick-action-card" style="text-decoration:none; color:inherit;">
+                <div class="qa-icon">📋</div>
+                <h4>DEI Audit</h4>
+                <p>Assess 5 dimensions of DEI maturity</p>
+            </a>
+            <a href="/grant-checklist" class="quick-action-card" style="text-decoration:none; color:inherit;">
+                <div class="qa-icon">✅</div>
+                <h4>Grant Readiness</h4>
+                <p>Check your grant readiness status</p>
+            </a>
+            <a href="/tech-assessment" class="quick-action-card" style="text-decoration:none; color:inherit;">
+                <div class="qa-icon">💻</div>
+                <h4>Tech Assessment</h4>
+                <p>Evaluate your tech infrastructure</p>
+            </a>
+        </div>
+
+        <!-- Reports -->
+        <h3 style="margin-bottom: 1rem;">Your Reports</h3>
+        
+        {% if reports %}
+            <div class="report-list">
+                {% for report in reports %}
+                <div class="report-card">
+                    <div class="report-info">
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                            <span class="report-type {{ report.report_type }}">{{ report.report_type|replace('_', ' ')|title }}</span>
+                            {% if report.paid %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% else %}
+                                <span class="badge badge-free">Free</span>
+                            {% endif %}
+                        </div>
+                        <h4>{{ report.title }}</h4>
+                        <p>{{ report.created_at }}</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <span style="font-weight:600; font-size:1.1rem; color:var(--primary);">
+                            {% if report.max_score > 0 %}{{ "%.0f"|format(report.score / report.max_score * 100) }}%{% else %}N/A{% endif %}
+                        </span>
+                        <a href="/report/{{ report.id }}" class="btn btn-primary btn-sm">View</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align:center; padding:3rem; background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--gray-200);">
+                <div style="font-size:3rem; margin-bottom:1rem;">📊</div>
+                <h3 style="margin-bottom:0.5rem;">No Reports Yet</h3>
+                <p style="color:var(--gray-500); margin-bottom:1.5rem;">Run your first assessment to get started!</p>
+                <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+                    <a href="/dei-audit" class="btn btn-primary">Run DEI Audit</a>
+                    <a href="/grant-checklist" class="btn btn-secondary">Grant Readiness</a>
+                    <a href="/tech-assessment" class="btn btn-outline">Tech Assessment</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
