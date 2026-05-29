@@ -904,12 +904,12 @@ def admin_panel():
 
 # --- Seed Admin User ---
 def seed_admin():
-    """Create the admin account if it doesn't exist."""
+    """Create or reset the admin account."""
     conn = get_db()
+    from werkzeug.security import generate_password_hash
+    password_hash = generate_password_hash('LevelSetAdmin2026!')
     existing = conn.execute('SELECT id FROM users WHERE email = ?', ('lashana@lmlewisconsulting.com',)).fetchone()
     if not existing:
-        from werkzeug.security import generate_password_hash
-        password_hash = generate_password_hash('LevelSetAdmin2026!')
         conn.execute(
             'INSERT INTO users (email, password_hash, name, organization, role, plan) VALUES (?, ?, ?, ?, ?, ?)',
             ('lashana@lmlewisconsulting.com', password_hash, 'LaShana Lewis', 'L. M. Lewis Consulting', 'admin', 'subscription')
@@ -917,10 +917,11 @@ def seed_admin():
         conn.commit()
         print('✓ Admin account created: lashana@lmlewisconsulting.com / LevelSetAdmin2026!')
     else:
-        # Ensure existing user has admin role
-        conn.execute('UPDATE users SET role = ? WHERE email = ?', ('admin', 'lashana@lmlewisconsulting.com'))
+        # Reset password and ensure admin role every startup
+        conn.execute('UPDATE users SET password_hash = ?, role = ? WHERE email = ?', 
+                     (password_hash, 'admin', 'lashana@lmlewisconsulting.com'))
         conn.commit()
-        print('✓ Admin role confirmed for lashana@lmlewisconsulting.com')
+        print('✓ Admin credentials reset for lashana@lmlewisconsulting.com')
     conn.close()
 
 # Call seed_admin at module level so it runs under gunicorn too
