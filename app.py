@@ -221,7 +221,7 @@ def dashboard():
 @app.route('/dei-audit', methods=['GET', 'POST'])
 @login_required
 def dei_audit():
-    # DEI Audit questions across 5 dimensions
+    # Org Health Assessment questions across 5 dimensions
     dimensions = [
         {
             'id': 'leadership',
@@ -329,7 +329,7 @@ def dei_audit():
         conn = get_db()
         cursor = conn.execute(
             'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
-            (current_user.id, 'dei_audit', f'DEI Audit - {datetime.now().strftime("%b %d, %Y")}', 
+            (current_user.id, 'dei_audit', f'Org Health Assessment - {datetime.now().strftime("%b %d, %Y")}', 
              report_data, score, max_possible)
         )
         conn.commit()
