@@ -1,23 +1,23 @@
 /* ===== LevelSet — Main Stylesheet ===== */
 
 :root {
-    --primary: #004D40; /* Deep Teal */
-    --primary-hover: #00332C;
-    --primary-light: #00695C;
-    --secondary: #CC6633; /* Warm Terracotta */
-    --secondary-hover: #B35229;
-    --accent: #9575CD; /* Soft Lavender */
-    --accent-light: #B39DDB;
+    --primary: #0D0D0D; /* Midnight Black */
+    --primary-hover: #333333;
+    --primary-light: #A6A6A6;
+    --secondary: #BF8B4B; /* Warm Tan */
+    --secondary-hover: #A6753A;
+    --accent: #F2E5A0; /* Warm Gold */
+    --accent-light: #F7EDB8;
     --success: #4CAF50;
     --warning: #FFB300;
     --error: #D32F2F;
     
     /* Neutrals */
-    --bg-main: #F5F5F5;
+    --bg-main: #F2F2F2;
     --bg-card: #FFFFFF;
-    --text-main: #263238;
-    --text-muted: #546E7A;
-    --border: #CFD8DC;
+    --text-main: #0D0D0D;
+    --text-muted: #A6A6A6;
+    --border: #A6A6A6;
     
     /* Gray scale for subtle layers */
     --gray-50: #FAFAFA;
