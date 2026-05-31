@@ -893,35 +893,118 @@ def admin_required(f):
 @admin_required
 def admin_panel():
     conn = get_db()
+    
+    # Stats
+    total_users = conn.execute('SELECT COUNT(*) as c FROM users').fetchone()['c']
+    total_reports = conn.execute('SELECT COUNT(*) as c FROM reports').fetchone()['c']
+    total_payments = conn.execute('SELECT COUNT(*) as c FROM payments').fetchone()['c']
+    total_revenue_row = conn.execute('SELECT COALESCE(SUM(amount), 0) as total FROM payments').fetchone()
+    total_revenue = total_revenue_row['total']
+    subscription_count = conn.execute("SELECT COUNT(*) as c FROM users WHERE plan = 'subscription'").fetchone()['c']
+    free_count = conn.execute("SELECT COUNT(*) as c FROM users WHERE plan = 'free'").fetchone()['c']
+    
+    # Assessment breakdown
+    dei_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'dei_audit'").fetchone()['c']
+    grant_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'grant_checklist'").fetchone()['c']
+    tech_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'tech_assessment'").fetchone()['c']
+    
+    # Average scores
+    avg_score = conn.execute('SELECT AVG(score * 100.0 / NULLIF(max_score, 0)) as avg FROM reports WHERE max_score > 0').fetchone()['avg'] or 0
+    
+    # Recent assessments with user info
+    recent_assessments = conn.execute('''
+        SELECT r.id, r.report_type, r.title, r.score, r.max_score, r.created_at,
+               u.email, u.name as user_name
+        FROM reports r JOIN users u ON r.user_id = u.id
+        ORDER BY r.created_at DESC LIMIT 10
+    ''').fetchall()
+    
+    # Users with delete buttons
+    users = conn.execute(
+        'SELECT id, email, name, organization, role, plan, created_at FROM users ORDER BY created_at DESC'
+    ).fetchall()
+    
+    # Contact messages
     messages = conn.execute(
         'SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 50'
     ).fetchall()
-    users = conn.execute(
-        'SELECT id, email, name, organization, role, plan, created_at FROM users ORDER BY created_at DESC LIMIT 50'
-    ).fetchall()
+    
+    # Conversion rate
+    conversion_rate = round((subscription_count / total_users * 100), 1) if total_users > 0 else 0
+    
     conn.close()
-    return render_template('admin_panel.html', messages=messages, users=users)
+    
+    return render_template('admin_panel.html',
+        total_users=total_users, total_reports=total_reports,
+        total_payments=total_payments, total_revenue=total_revenue,
+        subscription_count=subscription_count, free_count=free_count,
+        dei_count=dei_count, grant_count=grant_count, tech_count=tech_count,
+        avg_score=round(avg_score, 1), recent_assessments=recent_assessments,
+        messages=messages, users=users, conversion_rate=conversion_rate)
+
+@app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_user(user_id):
+    conn = get_db()
+    user = conn.execute('SELECT id, email, name FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        flash('User not found.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Don't allow deleting yourself
+    if user['id'] == current_user.id:
+        conn.close()
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Delete user's payments, reports, then user
+    conn.execute('DELETE FROM payments WHERE user_id = ?', (user_id,))
+    conn.execute('DELETE FROM reports WHERE user_id = ?', (user_id,))
+    conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    
+    flash(f'User {user["name"]} ({user["email"]}) deleted successfully.', 'success')
+    return redirect(url_for('admin_panel'))
 
 # --- Seed Admin User ---
 def seed_admin():
     """Create or reset the admin account."""
     conn = get_db()
     from werkzeug.security import generate_password_hash
-    password_hash = generate_password_hash('LevelSetAdmin2026!')
+    admin_pw = generate_password_hash('LevelSetAdmin2026!')
     existing = conn.execute('SELECT id FROM users WHERE email = ?', ('lashana@lmlewisconsulting.com',)).fetchone()
     if not existing:
         conn.execute(
             'INSERT INTO users (email, password_hash, name, organization, role, plan) VALUES (?, ?, ?, ?, ?, ?)',
-            ('lashana@lmlewisconsulting.com', password_hash, 'LaShana Lewis', 'L. M. Lewis Consulting', 'admin', 'subscription')
+            ('lashana@lmlewisconsulting.com', admin_pw, 'LaShana Lewis', 'L. M. Lewis Consulting', 'admin', 'subscription')
         )
         conn.commit()
         print('✓ Admin account created: lashana@lmlewisconsulting.com / LevelSetAdmin2026!')
     else:
-        # Reset password and ensure admin role every startup
         conn.execute('UPDATE users SET password_hash = ?, role = ? WHERE email = ?', 
-                     (password_hash, 'admin', 'lashana@lmlewisconsulting.com'))
+                     (admin_pw, 'admin', 'lashana@lmlewisconsulting.com'))
         conn.commit()
         print('✓ Admin credentials reset for lashana@lmlewisconsulting.com')
+    
+    # Create test accounts
+    test_users = [
+        ('alice@test.org', 'pw_alice', 'Alice Johnson', 'Nonprofit A', 'user', 'subscription'),
+        ('bob@test.org', 'pw_bob', 'Bob Smith', 'Startup B', 'user', 'free'),
+        ('carol@test.org', 'pw_carol', 'Carol Williams', 'Foundation C', 'user', 'subscription'),
+    ]
+    for email, pw, name, org, role, plan in test_users:
+        existing = conn.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone()
+        if not existing:
+            pw_hash = generate_password_hash(pw)
+            conn.execute(
+                'INSERT INTO users (email, password_hash, name, organization, role, plan) VALUES (?, ?, ?, ?, ?, ?)',
+                (email, pw_hash, name, org, role, plan)
+            )
+            print(f'✓ Test account created: {email} / {pw}')
+    conn.commit()
     conn.close()
 
 # Call seed_admin at module level so it runs under gunicorn too

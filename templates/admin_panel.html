@@ -6,72 +6,134 @@
     <div class="container">
         <div class="dashboard-header">
             <div>
-                <h1>Admin Panel</h1>
-                <p style="color: var(--text-muted);">Welcome, {{ current_user.name }}. Manage users and contact submissions.</p>
+                <h1>Admin Dashboard</h1>
+                <p style="color: var(--text-muted);">Welcome, {{ current_user.name }}. Analytics and management tools.</p>
             </div>
-            <a href="/dashboard" class="btn btn-outline btn-sm">Back to Dashboard</a>
+            <a href="/dashboard" class="btn btn-outline btn-sm">Back to User Dashboard</a>
         </div>
 
-        <!-- Contact Messages -->
+        <!-- Stats Cards -->
+        <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:2rem;">
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:2rem; font-weight:700; color:var(--primary);">{{ total_reports }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Total Assessments</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:2rem; font-weight:700; color:var(--primary);">{{ total_users }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Total Users</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:2rem; font-weight:700; color:var(--secondary);">{{ conversion_rate }}%</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Subscriber Conversion</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:2rem; font-weight:700; color:var(--success);">${{ "%.0f"|format(total_revenue) }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Total Revenue</div>
+            </div>
+        </div>
+
+        <!-- Assessment Breakdown -->
+        <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
+            <div class="stat-card" style="background:#EDE9FE; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:#6D28D9;">{{ dei_count }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Org Health Assessments</div>
+            </div>
+            <div class="stat-card" style="background:#D1FAE5; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:#047857;">{{ grant_count }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Grant Checklists</div>
+            </div>
+            <div class="stat-card" style="background:#DBEAFE; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:#1D4ED8;">{{ tech_count }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Tech Assessments</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ avg_score }}%</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Avg Score</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:var(--accent);">{{ subscription_count }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Subscribers</div>
+            </div>
+            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:700; color:var(--gray-500);">{{ free_count }}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Free Users</div>
+            </div>
+        </div>
+
+        <!-- Recent Assessments -->
         <div class="tool-section">
-            <h2>Contact Form Submissions</h2>
-            {% if messages %}
+            <h2>Recent Assessments</h2>
+            {% if recent_assessments %}
                 <div style="overflow-x: auto;">
-                    <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
+                    <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
                         <thead>
                             <tr style="background: var(--gray-100);">
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Date</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Name</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Email</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Subject</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Message</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">User</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Email</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Type</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Score</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for msg in messages %}
+                            {% for a in recent_assessments %}
                             <tr>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ msg.created_at }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ msg.name }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);"><a href="mailto:{{ msg.email }}">{{ msg.email }}</a></td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ msg.subject or '—' }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border); max-width:300px; word-wrap:break-word;">{{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ a.user_name }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ a.email }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
+                                    <span class="report-type {{ a.report_type }}" style="font-size:0.75rem;">
+                                        {{ a.report_type|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
+                                    {% if a.max_score > 0 %}
+                                        <strong>{{ "%.0f"|format(a.score / a.max_score * 100) }}%</strong>
+                                    {% else %}N/A{% endif %}
+                                </td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ a.created_at }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <p style="color: var(--text-muted);">No contact form submissions yet.</p>
+                <p style="color: var(--text-muted);">No assessments taken yet.</p>
             {% endif %}
         </div>
 
-        <!-- User Registrations -->
+        <!-- User Management -->
         <div class="tool-section">
-            <h2>User Registrations</h2>
+            <h2>User Management</h2>
             {% if users %}
                 <div style="overflow-x: auto;">
-                    <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
+                    <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
                         <thead>
                             <tr style="background: var(--gray-100);">
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">ID</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Name</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Email</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Org</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Role</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Plan</th>
-                                <th style="padding:0.75rem; text-align:left; border-bottom: 2px solid var(--border);">Joined</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">ID</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Name</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Email</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Org</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Role</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Plan</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Joined</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for u in users %}
                             <tr>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ u.id }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ u.name }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ u.email }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);">{{ u.organization or '—' }}</td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);"><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border);"><span class="badge badge-{{ u.plan }}">{{ u.plan }}</span></td>
-                                <td style="padding:0.5rem 0.75rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ u.created_at }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ u.id }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ u.name }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ u.email }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ u.organization or '—' }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);"><span class="badge" style="background:{% if u.role == 'admin' %}#EDE9FE; color:#6D28D9{% else %}#E5E7EB; color:#374151{% endif %};">{{ u.role }}</span></td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);"><span class="badge" style="background:{% if u.plan == 'subscription' %}#D1FAE5; color:#047857{% else %}#F3F4F6; color:#6B7280{% endif %};">{{ u.plan }}</span></td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ u.created_at }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
+                                    <form method="POST" action="/admin/delete-user/{{ u.id }}" onsubmit="return confirm('Delete user {{ u.name }} ({{ u.email }})? This cannot be undone.');">
+                                        <button type="submit" class="btn btn-danger btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;" {% if u.id == current_user.id %}disabled title="Cannot delete yourself"{% endif %}>Delete</button>
+                                    </form>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -79,6 +141,39 @@
                 </div>
             {% else %}
                 <p style="color: var(--text-muted);">No users registered yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Contact Messages -->
+        <div class="tool-section">
+            <h2>Contact Form Submissions</h2>
+            {% if messages %}
+                <div style="overflow-x: auto;">
+                    <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background: var(--gray-100);">
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Date</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Name</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Email</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Subject</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for msg in messages %}
+                            <tr>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ msg.created_at }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ msg.name }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);"><a href="mailto:{{ msg.email }}">{{ msg.email }}</a></td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ msg.subject or '—' }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); max-width:250px; word-wrap:break-word;">{{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted);">No contact form submissions yet.</p>
             {% endif %}
         </div>
     </div>
