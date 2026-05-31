@@ -721,6 +721,11 @@ def report_result(report_id):
         (report_id, current_user.id)
     ).fetchone()
     
+    if not report:
+        conn.close()
+        flash('Report not found', 'error')
+        return redirect(url_for('dashboard'), 303)
+    
     # Check if this is a paid report or user has subscription
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
     
@@ -735,10 +740,6 @@ def report_result(report_id):
             is_paid = True  # First report is free
     
     conn.close()
-    
-    if not report:
-        flash('Report not found', 'error')
-        return redirect(url_for('dashboard'), 303)
     
     report_data = json.loads(report['data'])
     
