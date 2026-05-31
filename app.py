@@ -764,7 +764,7 @@ def pay_for_report(report_id):
         return jsonify({'message': 'Already paid', 'redirect': url_for('report_result', report_id=report_id)})
     
     payment_id = request.json.get('payment_id', 'manual_' + str(datetime.now().timestamp()))
-    amount = 29.00  # Flat fee per report
+    amount = 49.00  # Flat fee per report
     
     conn.execute(
         'UPDATE reports SET paid = 1, payment_id = ? WHERE id = ?',
@@ -788,7 +788,7 @@ def subscribe():
     conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('subscription', current_user.id))
     conn.execute(
         'INSERT INTO payments (user_id, amount, payment_id) VALUES (?, ?, ?)',
-        (current_user.id, 29.00, payment_id)
+        (current_user.id, 49.00, payment_id)
     )
     conn.commit()
     conn.close()
@@ -859,7 +859,7 @@ def upgrade():
     conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('subscription', current_user.id))
     conn.execute(
         'INSERT INTO payments (user_id, amount, payment_id) VALUES (?, ?, ?)',
-        (current_user.id, 29.00, payment_id)
+        (current_user.id, 49.00, payment_id)
     )
     conn.commit()
     conn.close()
