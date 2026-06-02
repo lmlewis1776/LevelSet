@@ -83,23 +83,7 @@
             </div>
             {% endif %}
 
-            <!-- Results for Grant Checklist -->
-            {% if data.results %}
-            <h2 style="margin-bottom: 1rem;">Category Breakdown</h2>
-            <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
-                {% for cat_id, cat_data in data.results.items() %}
-                <div class="dimension-score">
-                    <span class="dim-name">{{ cat_id|replace('_', ' ')|title }}</span>
-                    <div style="display:flex; align-items:center; gap:1rem;">
-                        <div style="width: 120px; height: 8px; background: var(--gray-200); border-radius: 4px;">
-                            <div style="width: {{ cat_data.pct }}%; height: 100%; background: {{ '#22c55e' if cat_data.pct >= 80 else '#eab308' if cat_data.pct >= 55 else '#f97316' if cat_data.pct >= 30 else '#ef4444' }}; border-radius: 4px;"></div>
-                        </div>
-                        <span class="dim-value">{{ cat_data.checked }}/{{ cat_data.total }} ({{ cat_data.pct }}%)</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
+            
 
             <!-- Recommendations -->
             <div style="margin-top: 2rem;">
@@ -113,7 +97,7 @@
                         {% elif data.overall_pct >= 30 %}
                             <strong>You're on the right track.</strong> Focus on building the fundamentals first — policy, leadership buy-in, and basic data collection. Small, consistent steps will build momentum.
                         {% else %}
-                            <strong>Starting from strong intentions.</strong> The most impactful first step is securing leadership commitment and developing a clear DEI/grant/tech strategy. Consider starting with one or two high-impact areas.
+                            <strong>Starting from strong intentions.</strong> The most impactful first step is securing leadership commitment and developing a clear org health/tech strategy. Consider starting with one or two high-impact areas.
                         {% endif %}
                     </p>
                 </div>
@@ -140,7 +124,7 @@
 
             <!-- Actions -->
             <div style="display:flex; gap:1rem; justify-content:center; margin-top: 2rem; flex-wrap:wrap;">
-                <a href="/{{ report.report_type|replace('dei_audit', 'dei-audit')|replace('grant_checklist', 'grant-checklist')|replace('tech_assessment', 'tech-assessment') }}" class="btn btn-primary">Run Again</a>
+                <a href="/{{ report.report_type|replace('dei_audit', 'dei-audit')|replace('tech_assessment', 'tech-assessment') }}" class="btn btn-primary">Run Again</a>
                 <a href="/dashboard" class="btn btn-outline">Back to Dashboard</a>
                 <button onclick="window.print()" class="btn btn-secondary">Print Report</button>
             </div>
