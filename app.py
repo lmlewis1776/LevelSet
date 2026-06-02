@@ -791,7 +791,7 @@ def admin_panel():
     
     # Assessment breakdown
     dei_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'dei_audit'").fetchone()['c']
-    grant_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'grant_checklist'").fetchone()['c']
+   
     tech_count = conn.execute("SELECT COUNT(*) as c FROM reports WHERE report_type = 'tech_assessment'").fetchone()['c']
     
     # Average scores
@@ -824,7 +824,7 @@ def admin_panel():
         total_users=total_users, total_reports=total_reports,
         total_payments=total_payments, total_revenue=total_revenue,
         subscription_count=subscription_count, free_count=free_count,
-        dei_count=dei_count, grant_count=grant_count, tech_count=tech_count,
+        dei_count=dei_count,  tech_count=tech_count,
         avg_score=round(avg_score, 1), recent_assessments=recent_assessments,
         messages=messages, users=users, conversion_rate=conversion_rate)
 
