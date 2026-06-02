@@ -8,7 +8,9 @@ import sqlite3
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'equity-engine-dev-secret-key-change-in-prod')
+app.secret_key = os.environ.get('SECRET_KEY')
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is not set. Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\"")
 
 # Database setup
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'levelsethq.db')
@@ -488,7 +490,7 @@ def grant_checklist():
         {
             'id': 'talent_pathways',
             'name': 'Talent Pathways & People Infrastructure',
-            'items': [
+            'checklist_items': [
                 {'id': 'od1', 'text': 'Your job descriptions focus on skills and potential rather than credentials and years of experience'},
                 {'id': 'od2', 'text': 'You have a process for recognizing and advancing STARs (Skilled Through Alternative Routes) talent'},
                 {'id': 'od3', 'text': 'Your interview process is structured and consistent across all candidates'},
@@ -500,7 +502,7 @@ def grant_checklist():
         {
             'id': 'equity_infrastructure',
             'name': 'Equity Infrastructure & Accountability',
-            'items': [
+            'checklist_items': [
                 {'id': 'fi1', 'text': 'Your mission and vision statements are current and genuinely reflect your equity commitments'},
                 {'id': 'fi2', 'text': 'You have a board of directors that reflects community diversity'},
                 {'id': 'fi3', 'text': 'You collect data on who you serve and who you\'re missing — and use it'},
@@ -512,7 +514,7 @@ def grant_checklist():
         {
             'id': 'mission_ops',
             'name': 'Mission-Aligned Operations & Financial Health',
-            'items': [
+            'checklist_items': [
                 {'id': 'pr1', 'text': 'You have a current annual budget tied to programmatic priorities'},
                 {'id': 'pr2', 'text': 'Your funding sources are diversified (no single source >50%)'},
                 {'id': 'pr3', 'text': 'You have clear accounting systems and internal controls'},
@@ -524,7 +526,7 @@ def grant_checklist():
         {
             'id': 'community_capacity',
             'name': 'Community Connection & Capacity Building',
-            'items': [
+            'checklist_items': [
                 {'id': 'st1', 'text': 'Your programs are designed with community input, not just for community consumption'},
                 {'id': 'st2', 'text': 'Your materials and services are accessible across language, ability, and culture'},
                 {'id': 'st3', 'text': 'You have community impact stories that center the voices of those you serve'},
@@ -536,7 +538,7 @@ def grant_checklist():
         {
             'id': 'readiness_tracking',
             'name': 'Grant Readiness & Funding Strategy',
-            'items': [
+            'checklist_items': [
                 {'id': 'gm1', 'text': 'You have a grant tracking system or calendar'},
                 {'id': 'gm2', 'text': 'You can produce audited financials or reviewed statements'},
                 {'id': 'gm3', 'text': 'Your IRS 501(c)(3) determination and incorporation docs are current'},
@@ -553,9 +555,9 @@ def grant_checklist():
         checked_items = 0
         
         for cat in categories:
-            cat_total = len(cat['items'])
+            cat_total = len(cat['checklist_items'])
             cat_checked = 0
-            for item in cat['items']:
+            for item in cat['checklist_items']:
                 total_items += 1
                 if request.form.get(item['id']):
                     cat_checked += 1
@@ -976,10 +978,17 @@ def admin_delete_user(user_id):
 
 # --- Seed Admin User ---
 def seed_admin():
-    """Create or reset the admin account."""
+    """Create or reset the admin account using ADMIN_PASSWORD from environment."""
     conn = get_db()
     from werkzeug.security import generate_password_hash
-    admin_pw = generate_password_hash('LevelSetAdmin2026!')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    if not admin_password:
+        print('⚠  ADMIN_PASSWORD not set. Skipping admin account creation.')
+        print('   Set ADMIN_PASSWORD as an environment variable and restart.')
+        conn.close()
+        return
+    
+    admin_pw = generate_password_hash(admin_password)
     existing = conn.execute('SELECT id FROM users WHERE email = ?', ('lashana@lmlewisconsulting.com',)).fetchone()
     if not existing:
         conn.execute(
@@ -987,14 +996,14 @@ def seed_admin():
             ('lashana@lmlewisconsulting.com', admin_pw, 'LaShana Lewis', 'L. M. Lewis Consulting', 'admin', 'subscription')
         )
         conn.commit()
-        print('✓ Admin account created: lashana@lmlewisconsulting.com / LevelSetAdmin2026!')
+        print('✓ Admin account created for lashana@lmlewisconsulting.com')
     else:
         conn.execute('UPDATE users SET password_hash = ?, role = ? WHERE email = ?', 
                      (admin_pw, 'admin', 'lashana@lmlewisconsulting.com'))
         conn.commit()
-        print('✓ Admin credentials reset for lashana@lmlewisconsulting.com')
+        print('✓ Admin credentials updated for lashana@lmlewisconsulting.com')
     
-    # Create test accounts
+    # Create test accounts (only on fresh installs, weak passwords acceptable for dev)
     test_users = [
         ('alice@test.org', 'pw_alice', 'Alice Johnson', 'Nonprofit A', 'user', 'subscription'),
         ('bob@test.org', 'pw_bob', 'Bob Smith', 'Startup B', 'user', 'free'),
@@ -1008,7 +1017,7 @@ def seed_admin():
                 'INSERT INTO users (email, password_hash, name, organization, role, plan) VALUES (?, ?, ?, ?, ?, ?)',
                 (email, pw_hash, name, org, role, plan)
             )
-            print(f'✓ Test account created: {email} / {pw}')
+            print(f'✓ Test account created: {email}')
     conn.commit()
     conn.close()
 
