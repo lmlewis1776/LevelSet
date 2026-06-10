@@ -52,10 +52,17 @@ def init_db():
             max_score REAL DEFAULT 0,
             paid INTEGER DEFAULT 0,
             payment_id TEXT DEFAULT '',
+            org_type TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
+    
+    # Add org_type column if missing (for databases created before this schema)
+    try:
+        cursor.execute('ALTER TABLE reports ADD COLUMN org_type TEXT DEFAULT \'\'')
+    except:
+        pass  # Column already exists
     
     # Payments table
     cursor.execute('''
@@ -132,68 +139,18 @@ def inject_globals():
 import random
 
 # Readiness resources for assessment reports
-READINESS_RESOURCES = {
-    'high': [
-        {
-            'name': 'Human Rights Campaign (HRC) Workplace Equality',
-            'url': 'https://www.hrc.org/resources/buyers-guide-for-workplace-equality',
-            'description': 'HRC provides the Corporate Equality Index (CEI) — a national benchmarking tool for workplace policies and practices related to LGBTQ+ equality.'
-        },
-        {
-            'name': 'NAACP Resources',
-            'url': 'https://naacp.org/resources',
-            'description': 'NAACP offers resources on racial justice, civic engagement, and organizational equity practices.'
-        },
-        {
-            'name': 'Stanford Social Innovation Review',
-            'url': 'https://ssir.org/',
-            'description': 'Leading source of ideas and best practices for nonprofits and social enterprises.'
-        }
-    ],
-    'medium': [
-        {
-            'name': 'National Council of Nonprofits',
-            'url': 'https://www.councilofnonprofits.org/',
-            'description': 'Resources for nonprofit management best practices, capacity building, and organizational effectiveness.'
-        },
-        {
-            'name': 'Candid / GuideStar',
-            'url': 'https://candid.org/',
-            'description': 'Nonprofit data, profiles, and resources to help organizations build capacity and find funding.'
-        },
-        {
-            'name': 'TechSoup',
-            'url': 'https://www.techsoup.org/',
-            'description': 'Technology resources and donations for nonprofits to improve their tech infrastructure.'
-        }
-    ],
-    'basic': [
-        {
-            'name': 'Idealist',
-            'url': 'https://www.idealist.org/',
-            'description': 'Community of nonprofits, social enterprises, and changemakers with resources for capacity building.'
-        },
-        {
-            'name': 'NTEN: The Nonprofit Technology Network',
-            'url': 'https://www.nten.org/',
-            'description': 'Professional development and resources for nonprofit technology and digital strategy.'
-        },
-        {
-            'name': 'L. M. Lewis Consulting',
-            'url': 'https://lmlewisconsulting.com',
-            'description': 'Ready to go deeper? Book a consultation for personalized guidance on your organizational journey.'
-        }
-    ]
+PLACEHOLDER_ORG_RESOURCES = {
+    'nonprofit': '[Nonprofit resources — pending owner approval. Examples: capacity-building grants, nonprofit management tools, board development guides.]',
+    'forprofit': '[For-profit resources — pending owner approval. Examples: workplace culture assessments, talent retention strategies, inclusive leadership frameworks.]',
+    'government': '[Government/municipal resources — pending owner approval. Examples: public sector equity frameworks, community engagement toolkits, compliance guidance.]',
+    'other': '[General resources — pending owner approval. Examples: organizational health benchmarks, change management guides, strategic planning templates.]',
+    '': '[General resources — pending owner approval. Generic organizational development resources applicable across sectors.]'
 }
 
-def get_readiness_level(score, max_score):
-    pct = round((score / max_score) * 100) if max_score > 0 else 0
-    if pct >= 70:
-        return 'high'
-    elif pct >= 40:
-        return 'medium'
-    else:
-        return 'basic'
+DEFAULT_ORG_TYPE = ''
+
+def get_resources_for_org(org_type):
+    return PLACEHOLDER_ORG_RESOURCES.get(org_type, PLACEHOLDER_ORG_RESOURCES[''])
 
 @app.route('/')
 def index():
@@ -470,10 +427,11 @@ def dei_audit():
         })
         
         conn = get_db()
+        org_type = request.form.get('org_type', '')
         cursor = conn.execute(
-            'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO reports (user_id, report_type, title, data, score, max_score, org_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
             (current_user.id, 'dei_audit', f'Equitable Org Audit - {datetime.now().strftime("%b %d, %Y")}', 
-             report_data, score, max_possible)
+             report_data, score, max_possible, org_type)
         )
         conn.commit()
         report_id = cursor.lastrowid
@@ -581,11 +539,12 @@ def tech_assessment():
         })
         
         conn = get_db()
+        org_type = request.form.get('org_type', '')
         cursor = conn.execute(
-            'INSERT INTO reports (user_id, report_type, title, data, score, max_score) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO reports (user_id, report_type, title, data, score, max_score, org_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
             (current_user.id, 'tech_assessment',
              f'Tech Stack Assessment - {datetime.now().strftime("%b %d, %Y")}',
-             report_data, score, max_possible)
+             report_data, score, max_possible, org_type)
         )
         conn.commit()
         report_id = cursor.lastrowid
@@ -626,11 +585,11 @@ def report_result(report_id):
     
     report_data = json.loads(report['data'])
     
-    # Determine readiness level and get resources
-    readiness_level = get_readiness_level(report['score'], report['max_score']) if report['max_score'] > 0 else 'basic'
-    resources = READINESS_RESOURCES.get(readiness_level, READINESS_RESOURCES['basic'])
+    # Get org-type tailored resources
+    org_type = report['org_type'] or ''
+    org_resources = get_resources_for_org(org_type)
     
-    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid, resources=resources, readiness_level=readiness_level)
+    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid, org_resources=org_resources, org_type=org_type)
 
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
