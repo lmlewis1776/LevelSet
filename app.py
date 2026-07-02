@@ -155,8 +155,8 @@ def get_tailored_resources(org_type, report_type, score, max_score):
         'emerging': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "Every strong org starts with a clear baseline. Let's talk about your first steps."},
         'beginning': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "A 30-minute call can save you months of trial and error."}
     }
-    W3C_WAI = {"name": "W3C Web Accessibility Initiative", "url": "https://www.w3.org/WAI/", "description": "The definitive international framework for digital inclusion. Implementing these standards ensures your crisis communication and operational tools remain accessible to all users, regardless of ability or device constraints."}
-    TECHSOUP = {"name": "TechSoup", "url": "https://www.techsoup.org/", "description": "A global standard for mission-aligned technology procurement, providing nonprofits with the enterprise-grade software and hardware used by major corporations at highly subsidized rates to maximize social impact."}
+    CISA_GUIDES = {"name": "CISA Cyber Resilience Framework", "url": "https://cisa.gov", "description": "The definitive operational blueprint from the federal Cybersecurity and Infrastructure Security Agency. Utilizing this framework enables organizations to rigorously evaluate core resilience capabilities and build crisis-tested disaster playbooks."}
+    TECHSOUP = {"name": "TechSoup Disaster Recovery Program", "url": "https://techsoup.org", "description": "A highly specialized cloud procurement initiative providing nonprofits with deeply subsidized emergency hardware, disaster-planning software, and backup network assets used by enterprise organizations during system collapses."}
 
 
     resources = []
@@ -186,28 +186,43 @@ def get_tailored_resources(org_type, report_type, score, max_score):
         resources = type_data.get(band, [])
     
     elif report_type == 'tech_assessment':
-        # Tech assessment specific resources including W3C and TechSoup global swaps
+        # Tech assessment specific resources including CISA and TechSoup Disaster Recovery swaps
         if org_type == 'nonprofit':
-            if band == 'advanced': resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Nonprofit technology training and community."}, {"name": "Idealware", "url": "https://idealware.org/", "description": "Software reviews and planning."}, W3C_WAI]
-            elif band == 'developing': resources = [TECHSOUP, W3C_WAI]
-            elif band == 'emerging': resources = [{"name": "Digital.gov", "url": "https://digital.gov/", "description": "Accessibility and user experience guides."}, {"name": "Mozilla Web Literacy", "url": "https://foundation.mozilla.org/", "description": "Digital skills and web literacy."}]
-            else: resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Low-cost internet and devices."}, TECHSOUP]
+            if band == 'advanced':
+                resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Nonprofit technology training and community."}, {"name": "Idealware", "url": "https://idealware.org/", "description": "Software reviews and planning."}, CISA_GUIDES]
+            elif band == 'developing':
+                resources = [TECHSOUP, CISA_GUIDES]
+            elif band == 'emerging':
+                resources = [CISA_GUIDES, {"name": "Mozilla Web Literacy", "url": "https://foundation.mozilla.org/", "description": "Digital skills and web literacy."}]
+            else:
+                resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Low-cost internet and devices."}, TECHSOUP]
         elif org_type == 'forprofit':
-            if band == 'advanced': resources = [{"name": "Gartner IT", "url": "https://www.gartner.com/en/information-technology", "description": "IT strategy and benchmarking."}, {"name": "NIST Framework", "url": "https://www.nist.gov/cyberframework", "description": "Security maturity assessment."}, W3C_WAI]
-            elif band == 'developing': resources = [{"name": "CIO Magazine", "url": "https://www.cio.com/", "description": "Tech leadership and strategy."}, {"name": "Atlassian Playbook", "url": "https://www.atlassian.com/team-playbook", "description": "Collaboration tools and practices."}]
-            elif band == 'emerging': resources = [{"name": "DigitalOcean", "url": "https://www.digitalocean.com/community", "description": "Cloud infrastructure tutorials."}, {"name": "Stripe Resources", "url": "https://stripe.com/resources", "description": "Operations and payment guides."}]
-            else: resources = [{"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills training."}, {"name": "SBA Technology", "url": "https://www.sba.gov/business-guide/manage-your-business/technology", "description": "SBA tech guides."}]
+            if band == 'advanced':
+                resources = [{"name": "Gartner IT", "url": "https://www.gartner.com/en/information-technology", "description": "IT strategy and benchmarking."}, {"name": "NIST Framework", "url": "https://www.nist.gov/cyberframework", "description": "Security maturity assessment."}, CISA_GUIDES]
+            elif band == 'developing':
+                resources = [{"name": "CIO Magazine", "url": "https://www.cio.com/", "description": "Tech leadership and strategy."}, {"name": "Atlassian Playbook", "url": "https://www.atlassian.com/team-playbook", "description": "Collaboration tools and practices."}]
+            elif band == 'emerging':
+                resources = [{"name": "DigitalOcean", "url": "https://www.digitalocean.com/community", "description": "Cloud infrastructure tutorials."}, {"name": "Stripe Resources", "url": "https://stripe.com/resources", "description": "Operations and payment guides."}]
+            else:
+                resources = [{"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills training."}, {"name": "SBA Technology", "url": "https://www.sba.gov/business-guide/manage-your-business/technology", "description": "SBA tech guides."}]
         elif org_type == 'government':
-            if band == 'advanced': resources = [{"name": "18F", "url": "https://18f.gsa.gov/", "description": "Digital service delivery frameworks."}, {"name": "NASCIO", "url": "https://www.nascio.org/", "description": "State CIO resources."}, W3C_WAI]
-            elif band == 'developing': resources = [{"name": "GSA TTS", "url": "https://www.gsa.gov/technology", "description": "Federal technology resources."}, {"name": "Digital Government", "url": "https://www.govtech.com/cdg/", "description": "Public sector best practices."}]
-            elif band == 'emerging': resources = [{"name": "U.S. Digital Response", "url": "https://www.usdigitalresponse.org/", "description": "Pro bono tech support for government."}, {"name": "What Works Cities", "url": "https://whatworkscities.bloomberg.org/", "description": "Data-driven city tech."}]
-            else: resources = [{"name": "Civic Tech Field Guide", "url": "https://civictech.guide/", "description": "Community-driven civic tech resources."}, {"name": "Code for America", "url": "https://brigade.codeforamerica.org/", "description": "Local volunteer tech support."}]
+            if band == 'advanced':
+                resources = [{"name": "18F", "url": "https://18f.gsa.gov/", "description": "Digital service delivery frameworks."}, {"name": "NASCIO", "url": "https://www.nascio.org/", "description": "State CIO resources."}, CISA_GUIDES]
+            elif band == 'developing':
+                resources = [{"name": "GSA TTS", "url": "https://www.gsa.gov/technology", "description": "Federal technology resources."}, {"name": "Digital Government", "url": "https://www.govtech.com/cdg/", "description": "Public sector best practices."}]
+            elif band == 'emerging':
+                resources = [{"name": "U.S. Digital Response", "url": "https://www.usdigitalresponse.org/", "description": "Pro bono tech support for government."}, {"name": "What Works Cities", "url": "https://whatworkscities.bloomberg.org/", "description": "Data-driven city tech."}]
+            else:
+                resources = [{"name": "Civic Tech Field Guide", "url": "https://civictech.guide/", "description": "Community-driven civic tech resources."}, {"name": "Code for America", "url": "https://brigade.codeforamerica.org/", "description": "Local volunteer tech support."}]
         else: # Other / Fallback
-            if band == 'advanced': resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Mission-driven tech community."}, W3C_WAI]
-            elif band == 'developing': resources = [TECHSOUP, W3C_WAI]
-            elif band == 'emerging': resources = [{"name": "Digital.gov Accessibility", "url": "https://digital.gov/resources/accessibility/", "description": "Free accessibility guides."}, TECHSOUP]
-            else: resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Affordable internet and devices."}, {"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills."}]
-
+            if band == 'advanced':
+                resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Mission-driven tech community."}, CISA_GUIDES]
+            elif band == 'developing':
+                resources = [TECHSOUP, CISA_GUIDES]
+            elif band == 'emerging':
+                resources = [CISA_GUIDES, TECHSOUP]
+            else:
+                resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Affordable internet and devices."}, {"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills."}]
     # Always add Calendly with the tailored upsell message
     resources.append(CALENDLY[band])
     return resources
