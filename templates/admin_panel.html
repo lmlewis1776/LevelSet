@@ -27,7 +27,7 @@
                 <div style="font-size:0.85rem; color:var(--text-muted);">Subscriber Conversion</div>
             </div>
             <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
-                <div style="font-size:2rem; font-weight:700; color:var(--success);">${{ "%.0f"|format(total_revenue) }}</div>
+                <div style="font-size:2rem; font-weight:700; color:var(--success);">${{ total_revenue|round|int }}</div>
                 <div style="font-size:0.85rem; color:var(--text-muted);">Total Revenue</div>
             </div>
         </div>
@@ -79,12 +79,12 @@
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ a.email }}</td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
                                     <span class="report-type {{ a.report_type }}" style="font-size:0.75rem;">
-                                        {{% if a.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}}
+                                        {% if a.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}
                                     </span>
                                 </td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
                                     {% if a.max_score > 0 %}
-                                        <strong>{{ "%.0f"|format(a.score / a.max_score * 100) }}%</strong>
+                                        <strong>{{ (a.score / a.max_score * 100)|round|int }}%</strong>
                                     {% else %}N/A{% endif %}
                                 </td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ a.created_at }}</td>
