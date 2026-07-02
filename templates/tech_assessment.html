@@ -9,7 +9,7 @@
         <p>Evaluate your organization's technology across 4 critical areas: Infrastructure, CRM & Data, Digital Presence, and Fundraising Tech.</p>
     </div>
 
-    <form method="POST" action="/tech-assessment" id="tech-assessment-form">
+    <form method="POST" action="/tech-assessment" id="tech-assessment-form" novalidate>
         {% for category in categories %}
         <div class="tool-section">
             <h2>{{ category.name }}</h2>
@@ -37,4 +37,45 @@
         </div>
     </form>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('tech-assessment-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const radioGroups = {};
+            const radios = form.querySelectorAll('input[type="radio"][required]');
+            radios.forEach(r => radioGroups[r.name] = false);
+            radios.forEach(r => { if (r.checked) radioGroups[r.name] = true; });
+
+            let missingCount = 0;
+            let firstUnansweredRadio = null;
+
+            for (const groupName in radioGroups) {
+                if (!radioGroups[groupName]) {
+                    missingCount++;
+                    const missingRadio = form.querySelector(`input[name="${groupName}"]`);
+                    if (missingRadio) {
+                        const parentContainer = missingRadio.closest('.question-item');
+                        if (parentContainer) {
+                            parentContainer.style.border = '2px solid #D32F2F';
+                            parentContainer.style.borderRadius = '8px';
+                            if (!firstUnansweredRadio) firstUnansweredRadio = missingRadio;
+                        }
+                    }
+                } else {
+                    const answeredRadio = form.querySelector(`input[name="${groupName}"]`);
+                    const parentContainer = answeredRadio.closest('.question-item');
+                    if (parentContainer) parentContainer.style.border = 'none';
+                }
+            }
+
+            if (missingCount > 0) {
+                e.preventDefault();
+                alert('Please answer all required questions before generating your report.');
+                if (firstUnansweredRadio) firstUnansweredRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
