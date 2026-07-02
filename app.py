@@ -630,15 +630,14 @@ def report_result(report_id):
     # Check if this is a paid report or user has subscription
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
     
-    # Free users get a limited version for their first free report
-    free_used = False
+  # Free users get their very first created report fully unlocked for free
     if not is_paid and current_user.plan == 'free':
-        free_reports = conn.execute(
-            'SELECT COUNT(*) as cnt FROM payments WHERE user_id = ? AND amount = 0',
+        total_reports = conn.execute(
+            'SELECT COUNT(*) as cnt FROM reports WHERE user_id = ?',
             (current_user.id,)
         ).fetchone()
-        if free_reports['cnt'] < 1:
-            is_paid = True  # First report is free
+        if total_reports['cnt'] <= 1:
+            is_paid = True # First report is free
     
     conn.close()
     
