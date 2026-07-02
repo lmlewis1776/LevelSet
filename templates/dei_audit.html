@@ -37,4 +37,38 @@
         </div>
     </form>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const assessmentForm = document.getElementById('dei-audit-form');
+    if (assessmentForm) {
+        assessmentForm.addEventListener('submit', function(e) {
+            const questions = assessmentForm.querySelectorAll('.question-item');
+            let firstMissing = null;
+            let missingCount = 0;
+
+            questions.forEach(q => {
+                q.style.border = 'none';
+                q.style.padding = '1rem';
+            });
+
+            questions.forEach(question => {
+                const radios = question.querySelectorAll('input[type="radio"]');
+                const isAnswered = Array.from(radios).some(r => r.checked);
+                if (!isAnswered) {
+                    missingCount++;
+                    question.style.border = '2px solid #dc3545';
+                    question.style.borderRadius = '8px';
+                    if (!firstMissing) firstMissing = question;
+                }
+            });
+
+            if (missingCount > 0) {
+                e.preventDefault();
+                alert('Please answer all ' + missingCount + ' required questions before generating your report.');
+                firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
