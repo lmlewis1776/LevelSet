@@ -6,7 +6,7 @@
     <div class="container">
         <div class="dashboard-header">
             <div>
-                <h1>Welcome, {{ current_user.name }}!</h2>
+                <h1>Welcome, {{ current_user.name }}!</h1>
                 <p style="color: var(--gray-500);">
                     Plan: <span class="badge badge-{{ current_user.plan }}">{{ current_user.plan|capitalize }}</span>
                     {% if current_user.plan == 'subscription' %}
@@ -44,7 +44,7 @@
                 <div class="report-card">
                     <div class="report-info">
                         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <span class="report-type {{ report.report_type }}">{{% if report.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}}</span>
+                            <span class="report-type {{ report.report_type }}">{% if report.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}</span>
                             {% if report.paid %}
                                 <span class="badge badge-paid">Paid</span>
                             {% else %}
