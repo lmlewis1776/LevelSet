@@ -660,39 +660,17 @@ def report_result(report_id):
         'SELECT * FROM reports WHERE id = ? AND user_id = ?',
         (report_id, current_user.id)
     ).fetchone()
-    
     if not report:
         conn.close()
         flash('Report not found', 'error')
         return redirect(url_for('dashboard'), 303)
-        
-    # Check if this is a paid report or user has subscription
+
+    # Check if this specific report was paid for or if the user is a subscriber
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
-    
-    # Server-Side Gatekeeping (🔒 Lockout enforces > 1 rule for free users)
-    if current_user.plan == 'free':
-        total_reports = conn.execute(
-            'SELECT COUNT(*) as cnt FROM reports WHERE user_id = ?',
-            (current_user.id,)
-        ).fetchone()
-        
-        # If they have MORE than 1 report saved, the new ones are locked by default
-        if total_reports['cnt'] > 1 and report['paid'] != 1:
-            is_paid = False
-            
     conn.close()
-    report_data = json.loads(report['data'])
     
-    # Hacker-Proof Data Stripping: Keep the top-level scores for the free "Hook", 
-    # but strip out the detailed breakdowns and next-step links if not paid.
-    if not is_paid:
-        # Keep report_data['overall_pct'] and text labels intact for the visual progress blocks,
-        # but pop/delete the underlying breakdowns so they cannot be inspected in Dev Tools.
-        if 'category_scores' in report_data:
-            report_data.pop('category_scores', None)
-        if 'dimension_scores' in report_data:
-            report_data.pop('dimension_scores', None)
-            
+    report_data = json.loads(report['data'])
+
     # Premium Consultative Prose Analysis (💎 Premium Analysis)
     premium_analysis = ""
     if is_paid:
@@ -706,17 +684,13 @@ def report_result(report_id):
                 "Our diagnostic analysis reveals critical operational culture blind spots that actively undermine long-term talent retention and team cohesion. When organizational commitment to inclusion and equity remains informal and unstructured, a severe gap inevitably widens between executive strategic intent and the lived experience of everyday staff members. This lack of psychological safety and systemic feedback loops breeds unaddressed microaggressions, drives down employee engagement, and accelerates costly turnover of highly skilled, alternative-route (STARs) talent. Building an intentional, high-performance culture is not a secondary objective; it is a core business necessity. To resolve these hidden operational drains, leadership must establish explicit accountability metrics that treat workplace safety, belonging, and inclusive practices as rigorous performance benchmarks.\n\n"
                 "Additionally, the absence of standardized compensation benchmarks and structured salary bands represents a major operational and legal liability. Discretionary, opaque pay decisions naturally perpetuate historical wage gaps and expose your organization to profound regulatory non-compliance risks and internal trust deficits. By failing to publish transparent salary ranges and perform regular, equity-minded compensation audits, organizations systematically disadvantage historically marginalized workers and limit leadership pipeline health. To address this, your management team must deploy objective, data-driven management scorecards and formalized feedback channels. By directly tying executive reviews and department budgets to these culture-health key performance indicators (KPIs), you convert equity values into verified operational achievements."
             )
-            
-    # Get tailored resources based on score and org type
+
     org_type = report['org_type'] or 'other'
+    resources = get_tailored_resources(org_type, report['report_type'], report['score'], report['max_score'])
     
-    # If not paid, strip resources list entirely so next-step links are withheld
-    resources = []
-    if is_paid:
-        resources = get_tailored_resources(org_type, report['report_type'], report['score'], report['max_score'])
-        
-    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid, resources=resources, org_type=org_type, premium_analysis=premium_analysis)
-    
+    # We pass 'is_paid' to control only the text visibility. The score charts and links remain 100% visible on their first free run!
+    return render_template('report_result.html', report=report, data=report_data, is_paid=True, is_report_unlocked=is_paid, resources=resources, org_type=org_type, premium_analysis=premium_analysis)
+   
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
 def pay_for_report(report_id):
