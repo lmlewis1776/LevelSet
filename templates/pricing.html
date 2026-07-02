@@ -41,10 +41,18 @@
                     <li>Pay only when you need it</li>
                     <li class="disabled">Unlimited reports</li>
                 </ul>
+                <!-- Live Pay-Per-Report PayPal Engine Integration -->
                 {% if current_user.is_authenticated %}
-                    <p style="color: var(--gray-500); font-size:0.9rem;">Available on any plan</p>
+                    {% if request.args.get('report_id') %}
+                        <p style="font-size:0.85rem; color:#16a34a; font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
+                            ✓ Unlocking Report #{{ request.args.get('report_id') }}
+                        </p>
+                        <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ request.args.get('report_id') }}" data-amount="49.00" style="margin-top: 0.5rem;"></div>
+                    {% else %}
+                        <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Get Started (Pay-Per-Report)</a>
+                    {% endif %}
                 {% else %}
-                    <a href="/signup" class="btn btn-primary" style="width:100%;">Get Started</a>
+                    <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem;">Get Started</a>
                 {% endif %}
             </div>
 
