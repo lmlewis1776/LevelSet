@@ -389,8 +389,8 @@ def dei_audit():
             'questions': [
                 {'id': 'l1', 'text': 'Does your organization hire for skills and potential over credentials and degrees?', 'options': [('We prioritize degrees', 0), ('We\'re exploring skills-based hiring', 1), ('Skills and potential drive our hiring decisions', 2)]},
                 {'id': 'l2', 'text': 'Do you have a clear pathway for recognizing STARs (Skilled Through Alternative Routes) talent?', 'options': [('We don\'t track this', 0), ('We\'re starting to think about it', 1), ('Yes, we actively recruit and advance STARs', 2)]},
-                {'id': 'l3', 'text': 'Is your recruitment outreach designed to reach candidates from diverse and underrepresented backgrounds?', 'options': [('We post on the usual job boards', 0), ('We diversify some channels', 1), ('Multi-channel strategy designed for equity', 2)]},
-                {'id': 'l4', 'text': 'Do you have pay equity practices and transparent salary bands?', 'options': [('No, salaries are opaque', 0), ('Under review', 1), ('Yes, published bands and regular audits', 2)]},
+                {'id': 'l3', 'text': 'Is your recruitment outreach designed to reach highly qualified candidates through broad, competitive, and inclusive recruiting channels?', 'options': [('We post on the usual job boards', 0), ('We expand a few specialized channels', 1), ('Comprehensive multi-channel strategy for maximum reach', 2)]},
+                {'id': 'l4', 'text': 'Do you utilize standardized compensation benchmarks and structured salary bands?', 'options': [('No, salaries are opaque', 0), ('Under review', 1), ('Yes, published bands and regular audits', 2)]},
             ]
         },
         {
@@ -407,10 +407,10 @@ def dei_audit():
             'id': 'leadership',
             'name': 'Leadership Commitment & Accountability',
             'questions': [
-                {'id': 'w1', 'text': 'Is equity work embedded in your strategic plan and budget — not just a statement on your website?', 'options': [('No, it\'s aspirational', 0), ('Partially, with some budget', 1), ('Yes, funded goals with timelines', 2)]},
-                {'id': 'w2', 'text': 'Is equity represented at the board and executive leadership level?', 'options': [('No', 0), ('Informal champions only', 1), ('Yes, with role clarity and resources', 2)]},
-                {'id': 'w3', 'text': 'Are leaders evaluated on equity outcomes, not just intent?', 'options': [('No', 0), ('Informally discussed', 1), ('Yes, in performance reviews and goals', 2)]},
-                {'id': 'w4', 'text': 'Does leadership participate in ongoing equity learning and development?', 'options': [('One-time training only', 0), ('Occasionally', 1), ('Regular, embedded practice', 2)]},
+                {'id': 'w1', 'text': 'Are long-term organizational health initiatives embedded in your strategic plan and budget?', 'options': [('No, it\'s aspirational', 0), ('Partially, with some budget', 1), ('Yes, funded goals with timelines', 2)]},
+                {'id': 'w2', 'text': 'Are diverse operational perspectives actively represented at the board and executive leadership level?', 'options': [('No', 0), ('Informal champions only', 1), ('Yes, with role clarity and resources', 2)]},
+                {'id': 'w3', 'text': 'Are leaders explicitly evaluated on operational culture metrics, not just strategic intent?', 'options': [('No', 0), ('Informally discussed', 1), ('Yes, in performance reviews and goals', 2)]},
+                {'id': 'w4', 'text': 'Does executive leadership participate in ongoing professional and organizational culture development?', 'options': [('One-time training only', 0), ('Occasionally', 1), ('Regular, embedded practice', 2)]},
             ]
         },
         {
@@ -427,10 +427,10 @@ def dei_audit():
             'id': 'tech_mission',
             'name': 'Mission-Driven Technology & Infrastructure',
             'questions': [
-                {'id': 'a1', 'text': 'Does your technology infrastructure actively advance your equity goals (not just support operations)?', 'options': [('Tech is just for operations', 0), ('We\'re starting to connect them', 1), ('Tech decisions include equity criteria', 2)]},
+                {'id': 'a1', 'text': 'Does your core technology infrastructure actively support your operational and team accessibility goals?', 'options': [('Tech is just for operations', 0), ('We\'re starting to connect them', 1), ('Tech decisions include accessibility criteria', 2)]},
                 {'id': 'a2', 'text': 'Are the digital tools you use accessible to all stakeholders, including those with disabilities?', 'options': [('We haven\'t checked', 0), ('Partially accessible', 1), ('Yes, regularly tested for accessibility', 2)]},
                 {'id': 'a3', 'text': 'Do the communities you serve have a voice in the technology choices that affect them?', 'options': [('No', 0), ('We gather occasional input', 1), ('Community co-design is standard practice', 2)]},
-                {'id': 'a4', 'text': 'Is your data collection and storage equitable — protecting communities from harm while giving them agency over their data?', 'options': [('We haven\'t thought about this', 0), ('We have basic data privacy', 1), ('Yes, with community data sovereignty practices', 2)]},
+                {'id': 'a4', 'text': 'Is your data collection and storage inclusive — protecting communities from harm while giving them agency over their data?', 'options': [('We haven\'t thought about this', 0), ('We have basic data privacy', 1), ('Yes, with comprehensive user data governance practices', 2)]},
             ]
         }
     ]
@@ -490,7 +490,7 @@ def dei_audit():
         org_type = request.form.get('org_type', '')
         cursor = conn.execute(
             'INSERT INTO reports (user_id, report_type, title, data, score, max_score, org_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (current_user.id, 'dei_audit', f'Equitable Org Audit - {datetime.now().strftime("%b %d, %Y")}', 
+            (current_user.id, 'dei_audit', f'Organizational Health Assessment - {datetime.now().strftime("%b %d, %Y")}', 
              report_data, score, max_possible, org_type)
         )
         conn.commit()
