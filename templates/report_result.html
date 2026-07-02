@@ -88,16 +88,26 @@
             {% endif %}
 
             <!-- Premium Dynamic Prose Analysis -->
-            {% if premium_analysis %}
-                <div style="margin-top: 2rem; margin-bottom: 2rem;">
-                    <h2 style="margin-bottom: 0.75rem;">Premium Consultative Analysis</h2>
-                    <div style="background: #FFFDF5; border: 1px solid #FEF3C7; border-left: 4px solid #D97706; padding: 1.5rem; border-radius: var(--radius);">
-                        <p style="font-size:0.95rem; color: var(--gray-800); line-height: 1.6; white-space: pre-line; margin: 0;">
-                            {{ premium_analysis }}
-                        </p>
-                    </div>
+            {% if is_report_unlocked %}
+            <div style="margin-top: 2rem; margin-bottom: 2rem;">
+                <h2 style="margin-bottom: 0.75rem;">💎 Premium Consultative Analysis</h2>
+                <div style="background: #FFFDF5; border: 1px solid #FEF3C7; border-left: 4px solid #D97706; padding: 1.5rem; border-radius: var(--radius);">
+                    <p style="font-size:0.95rem; color: var(--gray-800); line-height: 1.6; white-space: pre-line; margin: 0;">
+                        {{ premium_analysis }}
+                    </p>
                 </div>
-            {% endif %}
+            </div>
+        {% else %}
+            <!-- Locked Paywall Overlay Container for Premium Analysis ONLY -->
+            <div style="margin-top: 2rem; margin-bottom: 2rem; text-align: center; padding: 2.5rem; background: #FAFAFA; border: 2px dashed var(--gray-300); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔒</div>
+                <h3 style="margin-bottom: 0.5rem; color: var(--gray-800);">Unlock Your Premium Consultative Analysis</h3>
+                <p style="max-width: 600px; margin: 0 auto 1.5rem auto; font-size: 0.9rem; color: var(--gray-500); line-height: 1.5;">
+                    Your baseline charts, category breakdowns, and foundational resources are fully available below! Unlock the deep, multi-paragraph corporate strategic analysis and custom operational mitigation roadmap tailored specifically to your risk profile in the expert voice of L. M. Lewis Consulting.
+                </p>
+                <a href="/pricing" class="btn btn-primary btn-sm">Unlock Executive Report ($49)</a>
+            </div>
+        {% endif %}
             
             <!-- Recommendations -->
             <div style="margin-top: 2rem;">
@@ -169,12 +179,7 @@
                     <h4 style="margin-bottom: 0.5rem;">Single Report</h4>
                     <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">$49</div>
                     <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom: 1rem;">One-time payment</p>
-                    <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ report.id }}" data-amount="49.00"></div>
-                    {% if current_user.plan == 'free' %}
-                        <button onclick="claimFreeReport({{ report.id }})" class="btn btn-outline btn-sm" style="margin-top: 0.5rem; width:100%;">
-                            Use My Free Report
-                        </button>
-                    {% endif %}
+                    <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ report.id }}" data-amount="49.00"></div>                    
                 </div>
                 
                 <div style="background: #F5F3FF; border: 2px solid var(--primary); border-radius: var(--radius-lg); padding: 1.5rem; min-width: 200px;">
