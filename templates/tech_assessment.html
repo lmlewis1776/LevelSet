@@ -1,42 +1,189 @@
 {% extends "base.html" %}
-{% block title %}Tech Assessment — LevelSet{% endblock %}
+{% block title %}BC/DR Assessment — LevelSet{% endblock %}
 
 {% block content %}
 <section class="tool-page">
     <div class="tool-header">
-        <span class="report-type tech_assessment">Tech Assessment</span>
-        <h1>Tech-Stack Assessment</h1>
-        <p>Evaluate your organization's technology across 4 critical areas: Infrastructure, CRM & Data, Digital Presence, and Fundraising Tech.</p>
+        <span class="report-type tech_assessment">BC/DR Assessment</span>
+        <h1>Business Continuity & Disaster Recovery (BC/DR) Assessment</h1>
+        <p>Evaluate your organization's resilience against sudden power loss, critical hardware failures, and malicious cyber threats. All 16 questions are strictly required to generate your security analysis.</p>
     </div>
 
     <form method="POST" action="/tech-assessment" id="tech-assessment-form" novalidate>
-        {% for category in categories %}
+        
+        <!-- Category 1: Infrastructure Redundancy & Power -->
         <div class="tool-section">
-            <h2>{{ category.name }}</h2>
-            {% for question in category.questions %}
+            <h2>Infrastructure Redundancy & Power</h2>
+            
             <div class="question-item">
-                <p>{{ question.text }}</p>
+                <p>1. Do you utilize a dedicated staging/sandbox environment to thoroughly test all software and OS upgrades before pushing them live to production?</p>
                 <div class="options">
-                    {% for option_text, option_value in question.options %}
-                    <label class="option-label">
-                        <input type="radio" name="{{ question.id }}" value="{{ option_value }}" required>
-                        <span>{{ option_text }}</span>
-                    </label>
-                    {% endfor %}
+                    <label class="option-label"><input type="radio" name="t1" value="0" required><span>No staging tests</span></label>
+                    <label class="option-label"><input type="radio" name="t1" value="1" required><span>Basic or manual local checks</span></label>
+                    <label class="option-label"><input type="radio" name="t1" value="2" required><span>Yes, fully isolated testing sandbox</span></label>
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="question-item">
+                <p>2. Do you have a secondary, automated 'failover' internet connection from a completely different service provider (e.g., fiber + cellular) to protect your operations?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t2" value="0" required><span>Single provider only</span></label>
+                    <label class="option-label"><input type="radio" name="t2" value="1" required><span>Manual backup connection available</span></label>
+                    <label class="option-label"><input type="radio" name="t2" value="2" required><span>Yes, automated multi-provider failover active</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>3. Do you have a professionally installed Uninterruptible Power Supply (UPS) for all critical local network hardware, and is it tested quarterly under a live load?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t3" value="0" required><span>No UPS protection</span></label>
+                    <label class="option-label"><input type="radio" name="t3" value="1" required><span>Present but untested/unmonitored</span></label>
+                    <label class="option-label"><input type="radio" name="t3" value="2" required><span>Yes, fully monitored and tested quarterly</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>4. If your primary corporate workspace becomes physically inaccessible tomorrow, is a pre-configured remote-work infrastructure ready for your entire team?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t4" value="0" required><span>No remote access plan</span></label>
+                    <label class="option-label"><input type="radio" name="t4" value="1" required><span>Fragmented or partial remote access</span></label>
+                    <label class="option-label"><input type="radio" name="t4" value="2" required><span>Yes, pre-configured infrastructure ready instantly</span></label>
+                </div>
+            </div>
         </div>
-        {% endfor %}
+
+        <!-- Category 2: Data Protection & Secure Backups -->
+        <div class="tool-section">
+            <h2>Data Protection & Secure Backups</h2>
+
+            <div class="question-item">
+                <p>5. Do you explicitly follow the 3-2-1 backup strategy (3 copies of data, across 2 different media types, with at least 1 copy isolated completely offsite)?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t5" value="0" required><span>Single storage copy only</span></label>
+                    <label class="option-label"><input type="radio" name="t5" value="1" required><span>Multiple copies stored in the same geographic location</span></label>
+                    <label class="option-label"><input type="radio" name="t5" value="2" required><span>Yes, true geo-redundant 3-2-1 strategy enforced</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>6. Are your critical organizational backups 'immutable' (cannot be altered) or completely 'air-gapped' to protect them from encryption during a ransomware attack?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t6" value="0" required><span>Vulnerable local/cloud sync backups</span></label>
+                    <label class="option-label"><input type="radio" name="t6" value="1" required><span>Standard automated cloud architecture</span></label>
+                    <label class="option-label"><input type="radio" name="t6" value="2" required><span>Yes, fully immutable or air-gapped backup locks active</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>7. Have you calculated and documented your exact Recovery Point Objective (RPO)—defining how many hours or days of data your organization can afford to lose?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t7" value="0" required><span>Never calculated or defined</span></label>
+                    <label class="option-label"><input type="radio" name="t7" value="1" required><span>General unwritten baseline target</span></label>
+                    <label class="option-label"><input type="radio" name="t7" value="2" required><span>Yes, strictly defined, documented, and monitored limits</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>8. When was the last time your team performed a live 'Fire Drill' data restoration to prove that your backup archives are readable and can be fully integrated?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t8" value="0" required><span>Never tested data restoration</span></label>
+                    <label class="option-label"><input type="radio" name="t8" value="1" required><span>Incomplete or rare restoration checks</span></label>
+                    <label class="option-label"><input type="radio" name="t8" value="2" required><span>Yes, regular live fire drill data restorations conducted</span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category 3: Crisis Communications & Digital Presence -->
+        <div class="tool-section">
+            <h2>Crisis Communications & Digital Presence</h2>
+
+            <div class="question-item">
+                <p>9. Do you have a secondary, secure out-of-band communication channel (e.g., Signal or independent Slack) that remains functional if primary business email goes dark?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t9" value="0" required><span>No alternative internal channels</span></label>
+                    <label class="option-label"><input type="radio" name="t9" value="1" required><span>Informal personal phone/text chains only</span></label>
+                    <label class="option-label"><input type="radio" name="t9" value="2" required><span>Yes, secure alternative channels pre-configured for all staff</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>10. Is there an official, written Crisis Communication Plan that explicitly identifies who is authorized to speak to stakeholders, staff, and the public during an active emergency?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t10" value="0" required><span>No documented communication plan</span></label>
+                    <label class="option-label"><input type="radio" name="t10" value="1" required><span>Informal or verbal agreement on leadership roles</span></label>
+                    <label class="option-label"><input type="radio" name="t10" value="2" required><span>Yes, comprehensive, written crisis communication playbook active</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>11. Do you maintain an emergency contact directory for all staff, key vendors, and primary clients that is fully accessible outside of your main corporate server network?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t11" value="0" required><span>Stored on the primary server network only</span></label>
+                    <label class="option-label"><input type="radio" name="t11" value="1" required><span>Offline paper directory or stale local spreadsheet</span></label>
+                    <label class="option-label"><input type="radio" name="t11" value="2" required><span>Yes, cloud-isolated, constantly synced emergency directory</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>12. Do you have pre-drafted communication alert templates (for social media, client notifications, and email blasts) ready to deploy instantly during a digital disruption?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t12" value="0" required><span>Written completely on the fly during a crisis</span></label>
+                    <label class="option-label"><input type="radio" name="t12" value="1" required><span>Basic text drafts without multi-channel routing plans</span></label>
+                    <label class="option-label"><input type="radio" name="t12" value="2" required><span>Yes, pre-drafted, multi-channel alert templates finalized</span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category 4: Operational Recovery & Resilience -->
+        <div class="tool-section">
+            <h2>Operational Recovery & Resilience</h2>
+
+            <div class="question-item">
+                <p>13. Do you have a designated, cross-functional Disaster Recovery Team consisting of representatives from IT, Help Desk, Executive Leadership, and Customer Support?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t13" value="0" required><span>No designated crisis response team</span></label>
+                    <label class="option-label"><input type="radio" name="t13" value="1" required><span>Internal IT division handles failures completely alone</span></label>
+                    <label class="option-label"><input type="radio" name="t13" value="2" required><span>Yes, formalized multi-department crisis management team active</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>14. Do you have a comprehensive, step-by-step Business Continuity Plan (BCP) manual detailing how to maintain manual or minimal business operations during a systemic outage?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t14" value="0" required><span>No written operational playbook</span></label>
+                    <label class="option-label"><input type="radio" name="t14" value="1" required><span>Outdated, fragmented, or incomplete training notes</span></label>
+                    <label class="option-label"><input type="radio" name="t14" value="2" required><span>Yes, comprehensive, step-by-step crisis guidebook finalized</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>15. Have you explicitly calculated your Recovery Time Objective (RTO)—the maximum threshold of time your organization can stay offline before facing collapse?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t15" value="0" required><span>Recovery timeframe limits are completely unknown</span></label>
+                    <label class="option-label"><input type="radio" name="t15" value="1" required><span>Rough verbal estimate without operational data backing</span></label>
+                    <label class="option-label"><input type="radio" name="t15" value="2" required><span>Yes, strictly calculated and tested operational downtime limits</span></label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <p>16. Does your leadership and crisis response team conduct at least one comprehensive annual simulation (Tabletop Exercise) to walk through a real-world disaster scenario?</p>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="t16" value="0" required><span>Operational disaster drills are never practiced</span></label>
+                    <label class="option-label"><input type="radio" name="t16" value="1" required><span>Brief verbal discussion reviews during meetings</span></label>
+                    <label class="option-label"><input type="radio" name="t16" value="2" required><span>Yes, at least one full annual tabletop simulation completed</span></label>
+                </div>
+            </div>
+        </div>
 
         <div style="text-align:center; margin-top:2rem;">
-            <button type="submit" class="btn btn-primary btn-lg">Generate My Tech Assessment Report</button>
+            <button type="submit" class="btn btn-primary btn-lg">Generate My BC/DR Assessment Report</button>
             <p style="color:var(--gray-500); font-size:0.85rem; margin-top:0.75rem;">
                 Your first report is free. Detailed results are $49 per report or included in the $49/month subscription.
             </p>
         </div>
     </form>
 </section>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('tech-assessment-form');
@@ -44,7 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             const radioGroups = {};
             const radios = form.querySelectorAll('input[type="radio"][required]');
-            radios.forEach(r => radioGroups[r.name] = false);
+            
+            radios.forEach(r => { radioGroups[r.name] = false; });
             radios.forEach(r => { if (r.checked) radioGroups[r.name] = true; });
 
             let missingCount = 0;
@@ -65,14 +213,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     const answeredRadio = form.querySelector(`input[name="${groupName}"]`);
                     const parentContainer = answeredRadio.closest('.question-item');
-                    if (parentContainer) parentContainer.style.border = 'none';
+                    if (parentContainer) { parentContainer.style.border = 'none'; }
                 }
             }
 
             if (missingCount > 0) {
                 e.preventDefault();
-                alert('Please answer all required questions before generating your report.');
-                if (firstUnansweredRadio) firstUnansweredRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                alert('Please answer all 16 required questions before generating your report.');
+                if (firstUnansweredRadio) {
+                    firstUnansweredRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         });
     }
