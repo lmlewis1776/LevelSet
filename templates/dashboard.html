@@ -1,16 +1,18 @@
 {% extends "base.html" %}
+
 {% block title %}Dashboard — LevelSet{% endblock %}
 
 {% block content %}
 <section class="dashboard">
     <div class="container">
+        
         <div class="dashboard-header">
             <div>
                 <h1>Welcome, {{ current_user.name }}!</h1>
                 <p style="color: var(--gray-500);">
                     Plan: <span class="badge badge-{{ current_user.plan }}">{{ current_user.plan|capitalize }}</span>
                     {% if current_user.plan == 'subscription' %}
-                    — <a href="/manage-subscription" style="font-size:0.85rem;">Manage</a>
+                        — <a href="/manage-subscription" style="font-size:0.85rem;">Manage</a>
                     {% endif %}
                 </p>
             </div>
@@ -27,7 +29,6 @@
                 <h4>Org Health Assessment</h4>
                 <p>Assess 5 dimensions of operational culture and health maturity</p>
             </a>
-           
             <a href="/tech-assessment" class="quick-action-card" style="text-decoration:none; color:inherit;">
                 <div class="qa-icon">💻</div>
                 <h4>BC/DR Assessment</h4>
@@ -37,40 +38,39 @@
 
         <!-- Reports -->
         <h2 style="margin-bottom: 1rem;">Your Reports</h2>
-        
         {% if reports %}
             <div class="report-list">
                 {% for report in reports %}
-                <div class="report-card">
-                    <div class="report-info">
-                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <span class="report-type {{ report['report_type'] }}">
-                                {% if report['report_type'] == 'tech_assessment' %}
-                                    BC/DR Assessment
+                    <div class="report-card">
+                        <div class="report-info">
+                            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                                <span class="report-type {{ report['report_type'] }}">
+                                    {% if report['report_type'] == 'tech_assessment' %}
+                                        BC/DR Assessment
+                                    {% else %}
+                                        Organizational Health Assessment
+                                    {% endif %}
+                                </span>
+                                {% if report['paid'] %}
+                                    <span class="badge badge-paid">Paid</span>
                                 {% else %}
-                                    Organizational Health Assessment
+                                    <span class="badge badge-free">Free</span>
+                                {% endif %}
+                            </div>
+                            <h4>{{ report['title'] }}</h4>
+                            <p>{{ report['created_at'] }}</p>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <span style="font-weight:600; font-size:1.1rem; color:var(--primary);">
+                                {% if report['max_score'] and report['max_score'] > 0 %}
+                                    {{ ((report['score'] / report['max_score']) * 100)|round|int }}%
+                                {% else %}
+                                    N/A
                                 {% endif %}
                             </span>
-                            {% if report['paid'] %}
-                                <span class="badge badge-paid">Paid</span>
-                            {% else %}
-                                <span class="badge badge-free">Free</span>
-                            {% endif %}
+                            <a href="/report/{{ report['id'] }}" class="btn btn-primary btn-sm">View</a>
                         </div>
-                        <h4>{{ report['title'] }}</h4>
-                        <p>{{ report['created_at'] }}</p>
                     </div>
-                    <div style="display:flex; gap:0.5rem; align-items:center;">
-                        <span style="font-weight:600; font-size:1.1rem; color:var(--primary);">
-                            {% if report['max_score'] and report['max_score'] > 0 %}
-                                {{ "%.0f"|format(report['score'] / report['max_score'] * 100) }}%
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </span>
-                        <a href="/report/{{ report['id'] }}" class="btn btn-primary btn-sm">View</a>
-                    </div>
-                </div>
                 {% endfor %}
             </div>
         {% else %}
@@ -80,11 +80,11 @@
                 <p style="color:var(--gray-500); margin-bottom:1.5rem;">Run your first assessment to get started!</p>
                 <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
                     <a href="/dei-audit" class="btn btn-primary">Start Organizational Health Assessment</a>
-                  
                     <a href="/tech-assessment" class="btn btn-outline">Start BC/DR Assessment</a>
                 </div>
             </div>
         {% endif %}
+
     </div>
 </section>
 {% endblock %}
