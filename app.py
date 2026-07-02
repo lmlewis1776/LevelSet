@@ -505,45 +505,45 @@ def dei_audit():
 @app.route('/tech-assessment', methods=['GET', 'POST'])
 @login_required
 def tech_assessment():
-    categories = [
+categories = [
         {
             'id': 'infrastructure',
-            'name': 'Infrastructure & Equity',
+            'name': 'Infrastructure Redundancy & Power',
             'questions': [
-                {'id': 't1', 'text': 'Do you use cloud-based tools that are accessible to all staff regardless of device or location?', 'options': [('No/Limited', 0), ('Partially', 1), ('Yes, fully accessible', 2)]},
-                {'id': 't2', 'text': 'Is your data backed up securely and protected from loss?', 'options': [('No/Unsure', 0), ('Occasional backups', 1), ('Automated, tested backups', 2)]},
-                {'id': 't3', 'text': 'Do you have an IT security policy that includes protections for community data?', 'options': [('No', 0), ('Basic password policy', 1), ('Yes, comprehensive', 2)]},
-                {'id': 't4', 'text': 'Are your digital tools and platforms designed to be accessible to people with disabilities?', 'options': [('Not assessed', 0), ('Partially accessible', 1), ('Yes, WCAG-compliant', 2)]},
+                {'id': 't1', 'text': '', 'options': []}, # Template handles text
+                {'id': 't2', 'text': '', 'options': []},
+                {'id': 't3', 'text': '', 'options': []},
+                {'id': 't4', 'text': '', 'options': []},
             ]
         },
         {
             'id': 'crm',
-            'name': 'Data, CRM & Community Insights',
+            'name': 'Data Protection & Secure Backups',
             'questions': [
-                {'id': 't5', 'text': 'Do you use a CRM or database that helps you understand who you serve and who you\'re missing?', 'options': [('Spreadsheets only', 0), ('Basic system', 1), ('Purpose-built with equity reporting', 2)]},
-                {'id': 't6', 'text': 'Can you generate reports that disaggregate data by race, income, geography, or other equity dimensions?', 'options': [('No', 0), ('With difficulty', 1), ('Easily and regularly', 2)]},
-                {'id': 't7', 'text': 'Do your data practices protect community agency — giving people control over their own information?', 'options': [('No/Unsure', 0), ('Basic privacy', 1), ('Yes, community data sovereignty', 2)]},
-                {'id': 't8', 'text': 'Do your tools integrate with each other, or do you spend time on manual data entry?', 'options': [('All manual', 0), ('Some integration', 1), ('Automated workflows', 2)]},
+                {'id': 't5', 'text': '', 'options': []},
+                {'id': 't6', 'text': '', 'options': []},
+                {'id': 't7', 'text': '', 'options': []},
+                {'id': 't8', 'text': '', 'options': []},
             ]
         },
         {
             'id': 'digital',
-            'name': 'Digital Presence & Equitable Engagement',
+            'name': 'Crisis Communications & Digital Presence',
             'questions': [
-                {'id': 't9', 'text': 'Is your website modern, mobile-friendly, and accessible to people with disabilities?', 'options': [('Outdated', 0), ('Basic', 1), ('Modern, accessible, tested', 2)]},
-                {'id': 't10', 'text': 'Do you use digital tools to engage the communities you serve in ways that work for them?', 'options': [('No/One-size-fits-all', 0), ('Some channels', 1), ('Multi-channel, community-informed', 2)]},
-                {'id': 't11', 'text': 'Is your website content available in languages your community speaks?', 'options': [('English only', 0), ('A few pages translated', 1), ('Multi-language by design', 2)]},
-                {'id': 't12', 'text': 'Do you track analytics that measure equitable reach — not just total traffic?', 'options': [('Basic page views', 0), ('Some demographic data', 1), ('Yes, equity-focused analytics', 2)]},
+                {'id': 't9', 'text': '', 'options': []},
+                {'id': 't10', 'text': '', 'options': []},
+                {'id': 't11', 'text': '', 'options': []},
+                {'id': 't12', 'text': '', 'options': []},
             ]
         },
         {
             'id': 'fundraising',
-            'name': 'Fundraising Tech & Financial Accessibility',
+            'name': 'Operational Recovery & Resilience',
             'questions': [
-                {'id': 't13', 'text': 'Do you accept online payments/donations through an accessible, user-friendly platform?', 'options': [('No/Outdated', 0), ('Basic form', 1), ('Integrated, accessible platform', 2)]},
-                {'id': 't14', 'text': 'Do you offer recurring giving or payment options that reduce barriers for supporters?', 'options': [('No', 0), ('Manual only', 1), ('Yes, automated and flexible', 2)]},
-                {'id': 't15', 'text': 'Do you use event or program management software that makes participation accessible?', 'options': [('No', 0), ('Basic tools', 1), ('Full-featured and inclusive', 2)]},
-                {'id': 't16', 'text': 'Are your payment and donation systems secure and trusted by the communities you serve?', 'options': [('Not sure', 0), ('Basic security', 1), ('Yes, certified and transparent', 2)]},
+                {'id': 't13', 'text': '', 'options': []},
+                {'id': 't14', 'text': '', 'options': []},
+                {'id': 't15', 'text': '', 'options': []},
+                {'id': 't16', 'text': '', 'options': []},
             ]
         }
     ]
