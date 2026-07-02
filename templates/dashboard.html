@@ -44,21 +44,31 @@
                 <div class="report-card">
                     <div class="report-info">
                         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <span class="report-type {{ report.report_type }}">{% if report.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}</span>
-                            {% if report.paid %}
+                            <span class="report-type {{ report['report_type'] }}">
+                                {% if report['report_type'] == 'tech_assessment' %}
+                                    BC/DR Assessment
+                                {% else %}
+                                    Organizational Health Assessment
+                                {% endif %}
+                            </span>
+                            {% if report['paid'] %}
                                 <span class="badge badge-paid">Paid</span>
                             {% else %}
                                 <span class="badge badge-free">Free</span>
                             {% endif %}
                         </div>
-                        <h4>{{ report.title }}</h4>
-                        <p>{{ report.created_at }}</p>
+                        <h4>{{ report['title'] }}</h4>
+                        <p>{{ report['created_at'] }}</p>
                     </div>
                     <div style="display:flex; gap:0.5rem; align-items:center;">
                         <span style="font-weight:600; font-size:1.1rem; color:var(--primary);">
-                            {% if report.max_score > 0 %}{{ "%.0f"|format(report.score / report.max_score * 100) }}%{% else %}N/A{% endif %}
+                            {% if report['max_score'] and report['max_score'] > 0 %}
+                                {{ "%.0f"|format(report['score'] / report['max_score'] * 100) }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </span>
-                        <a href="/report/{{ report.id }}" class="btn btn-primary btn-sm">View</a>
+                        <a href="/report/{{ report['id'] }}" class="btn btn-primary btn-sm">View</a>
                     </div>
                 </div>
                 {% endfor %}
