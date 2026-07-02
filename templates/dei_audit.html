@@ -39,33 +39,52 @@
 </section>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const assessmentForm = document.getElementById('dei-audit-form');
-    if (assessmentForm) {
-        assessmentForm.addEventListener('submit', function(e) {
-            const questions = assessmentForm.querySelectorAll('.question-item');
-            let firstMissing = null;
-            let missingCount = 0;
-
-            questions.forEach(q => {
-                q.style.border = 'none';
-                q.style.padding = '1rem';
+    const form = document.getElementById('dei-audit-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const radioGroups = {};
+            const radios = form.querySelectorAll('input[type="radio"][required]');
+            
+            // Group all required radios by their input name attribute
+            radios.forEach(r => {
+                radioGroups[r.name] = false;
             });
 
-            questions.forEach(question => {
-                const radios = question.querySelectorAll('input[type="radio"]');
-                const isAnswered = Array.from(radios).some(r => r.checked);
-                if (!isAnswered) {
-                    missingCount++;
-                    question.style.border = '2px solid #dc3545';
-                    question.style.borderRadius = '8px';
-                    if (!firstMissing) firstMissing = question;
+            // Mark a group as true if any button inside it is checked
+            radios.forEach(r => {
+                if (r.checked) {
+                    radioGroups[r.name] = true;
                 }
             });
 
+            let missingCount = 0;
+            let firstUnansweredRadio = null;
+
+            // Count how many distinct question groups are completely unanswered
+            for (const groupName in radioGroups) {
+                if (!radioGroups[groupName]) {
+                    missingCount++;
+                    const missingRadio = form.querySelector(`input[name="${groupName}"]`);
+                    
+                    // Highlight the parent block container dynamically
+                    if (missingRadio) {
+                        const parentContainer = missingRadio.closest('div');
+                        if (parentContainer) {
+                            parentContainer.style.border = '2px solid #dc3545';
+                            parentContainer.style.borderRadius = '8px';
+                            parentContainer.style.padding = '10px';
+                            if (!firstUnansweredRadio) firstUnansweredRadio = missingRadio;
+                        }
+                    }
+                }
+            }
+
             if (missingCount > 0) {
-                e.preventDefault();
-                alert('Please answer all ' + missingCount + ' required questions before generating your report.');
-                firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                e.preventDefault(); // Stop form submission
+                alert('Please answer all required questions before generating your report.');
+                if (firstUnansweredRadio) {
+                    firstUnansweredRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         });
     }
