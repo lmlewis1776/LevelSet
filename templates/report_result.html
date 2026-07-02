@@ -8,7 +8,7 @@
             {% if report.report_type == 'tech_assessment' %}
                 BC/DR Assessment
         {% else %}
-            {{ report.report_type|replace('_', ' ')|title }}
+            {{% if report.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}}
         {% endif %}
 </span>
         <h1>{{ report.title }}</h1>
