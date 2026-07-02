@@ -505,7 +505,7 @@ def dei_audit():
 @app.route('/tech-assessment', methods=['GET', 'POST'])
 @login_required
 def tech_assessment():
-categories = [
+    categories = [
         {
             'id': 'infrastructure',
             'name': 'Infrastructure Redundancy & Power',
