@@ -31,7 +31,7 @@
             <a href="/tech-assessment" class="quick-action-card" style="text-decoration:none; color:inherit;">
                 <div class="qa-icon">💻</div>
                 <h4>BC/DR Assessment</h4>
-                <p>Evaluate your tech infrastructure</p>
+                <p>Evaluate your BC/DR structure</p>
             </a>
         </div>
 
@@ -44,7 +44,7 @@
                 <div class="report-card">
                     <div class="report-info">
                         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <span class="report-type {{ report.report_type }}">{{ report.report_type|replace('_', ' ')|title }}</span>
+                            <span class="report-type {{ report.report_type }}">{{% if report.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}}</span>
                             {% if report.paid %}
                                 <span class="badge badge-paid">Paid</span>
                             {% else %}
@@ -69,7 +69,7 @@
                 <h2 style="margin-bottom:0.5rem;">No Reports Yet</h2>
                 <p style="color:var(--gray-500); margin-bottom:1.5rem;">Run your first assessment to get started!</p>
                 <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-                    <a href="/dei-audit" class="btn btn-primary">Run Org Assessment</a>
+                    <a href="/dei-audit" class="btn btn-primary">Start Organizational Health Assessment</a>
                   
                     <a href="/tech-assessment" class="btn btn-outline">Start BC/DR Assessment</a>
                 </div>
