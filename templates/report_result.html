@@ -87,6 +87,18 @@
                 </div>
             {% endif %}
 
+            <!-- Premium Dynamic Prose Analysis -->
+            {% if premium_analysis %}
+                <div style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <h2 style="margin-bottom: 0.75rem;">Premium Consultative Analysis</h2>
+                    <div style="background: #FFFDF5; border: 1px solid #FEF3C7; border-left: 4px solid #D97706; padding: 1.5rem; border-radius: var(--radius);">
+                        <p style="font-size:0.95rem; color: var(--gray-800); line-height: 1.6; white-space: pre-line; margin: 0;">
+                            {{ premium_analysis }}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+            
             <!-- Recommendations -->
             <div style="margin-top: 2rem;">
                 <h2 style="margin-bottom: 0.75rem;">Recommendations</h2>
