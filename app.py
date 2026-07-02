@@ -397,6 +397,17 @@ def dashboard():
 @app.route('/dei-audit', methods=['GET', 'POST'])
 @login_required
 def dei_audit():
+    if current_user.plan == 'free':
+        conn = get_db()
+        total_reports = conn.execute(
+            'SELECT COUNT(*) as cnt FROM reports WHERE user_id = ?',
+            (current_user.id,)
+        ).fetchone()
+        conn.close()
+        if total_reports['cnt'] >= 1:
+            flash('You have already used your 1 free allotment. Please upgrade or purchase a report to continue.', 'info')
+            return redirect(url_for('pricing'))
+
     dimensions = [
         {
             'id': 'hiring_access',
@@ -521,6 +532,17 @@ def dei_audit():
 @app.route('/tech-assessment', methods=['GET', 'POST'])
 @login_required
 def tech_assessment():
+    if current_user.plan == 'free':
+        conn = get_db()
+        total_reports = conn.execute(
+            'SELECT COUNT(*) as cnt FROM reports WHERE user_id = ?',
+            (current_user.id,)
+        ).fetchone()
+        conn.close()
+        if total_reports['cnt'] >= 1:
+            flash('You have already used your 1 free allotment. Please upgrade or purchase a report to continue.', 'info')
+            return redirect(url_for('pricing'))
+
     categories = [
         {
             'id': 'infrastructure',
@@ -647,20 +669,41 @@ def report_result(report_id):
     # Check if this is a paid report or user has subscription
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
     
-  # Free users get their very first created report fully unlocked for free
-    if not is_paid and current_user.plan == 'free':
+    # Server-Side Gatekeeping (🔒 Lockout)
+    if current_user.plan == 'free':
         total_reports = conn.execute(
             'SELECT COUNT(*) as cnt FROM reports WHERE user_id = ?',
             (current_user.id,)
         ).fetchone()
-        if total_reports['cnt'] <= 1:
-            is_paid = True # First report is free
+        if total_reports['cnt'] >= 1 and report['paid'] != 1:
+            is_paid = False
     
     conn.close()
     
     report_data = json.loads(report['data'])
     
-# Get tailored resources based on score and org type
+    # If not paid, completely empty category_scores and dimension_scores data dictionaries
+    if not is_paid:
+        if 'category_scores' in report_data:
+            report_data['category_scores'] = {}
+        if 'dimension_scores' in report_data:
+            report_data['dimension_scores'] = {}
+            
+    # Premium Consultative Prose Analysis (💎 Premium Analysis)
+    premium_analysis = ""
+    if is_paid:
+        if report['report_type'] == 'tech_assessment':
+            premium_analysis = (
+                "Based on our exhaustive system diagnostics, organizations operating in this scoring tier present deep structural vulnerabilities across their primary physical and cloud-based infrastructure. A lack of formalized power redundancy, unverified offsite failover networks, and the absence of clear crisis-communication directory structures mean that any local utility disruption or server crash has the potential to cascade into a catastrophic system outage. In the advisory experience of L. M. Lewis Consulting, relying on ad-hoc, manual interventions during an active infrastructure collapse is the single highest contributor to permanent database corruption and prolonged business downtime. To secure your operational baseline, your leadership must immediately transition from hopeful assumptions to engineered resilience by formalizing physical failovers and implementing air-gapped, immutable backup systems.\n\n"
+                "Furthermore, our assessment highlights severe exposure regarding third-party vendor dependencies and opaque downstream service agreements. When critical business applications, database systems, or client-facing portals are integrated without rigorous Service Level Agreements (SLAs), data escrow protections, or automated verification testing, your organization surrenders absolute control of its continuity to external providers. To mitigate these unmonitored liabilities, we recommend executing an immediate triage playbook. First, conduct a zero-trust audit to document every single point of failure within your downstream vendor portfolio. Second, establish immediate offline communication redundancy plans and execute live, scheduled data-recovery restoration drills. Standardizing these continuity parameters ensures your organization remains fully resilient and mission-capable through any upstream technological failure."
+            )
+        elif report['report_type'] == 'dei_audit':
+            premium_analysis = (
+                "Our diagnostic analysis reveals critical operational culture blind spots that actively undermine long-term talent retention and team cohesion. When organizational commitment to inclusion and equity remains informal and unstructured, a severe gap inevitably widens between executive strategic intent and the lived experience of everyday staff members. This lack of psychological safety and systemic feedback loops breeds unaddressed microaggressions, drives down employee engagement, and accelerates costly turnover of highly skilled, alternative-route (STARs) talent. Building an intentional, high-performance culture is not a secondary objective; it is a core business necessity. To resolve these hidden operational drains, leadership must establish explicit accountability metrics that treat workplace safety, belonging, and inclusive practices as rigorous performance benchmarks.\n\n"
+                "Additionally, the absence of standardized compensation benchmarks and structured salary bands represents a major operational and legal liability. Discretionary, opaque pay decisions naturally perpetuate historical wage gaps and expose your organization to profound regulatory non-compliance risks and internal trust deficits. By failing to publish transparent salary ranges and perform regular, equity-minded compensation audits, organizations systematically disadvantage historically marginalized workers and limit leadership pipeline health. To address this, your management team must deploy objective, data-driven management scorecards and formalized feedback channels. By directly tying executive reviews and department budgets to these culture-health key performance indicators (KPIs), you convert equity values into verified operational achievements."
+            )
+    
+    # Get tailored resources based on score and org type
     org_type = report['org_type'] or 'other'
     resources = get_tailored_resources(org_type, report['report_type'], report['score'], report['max_score'])
     
@@ -669,7 +712,8 @@ def report_result(report_id):
                          data=report_data, 
                          is_paid=is_paid, 
                          resources=resources, 
-                         org_type=org_type)
+                         org_type=org_type,
+                         premium_analysis=premium_analysis)
     
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
