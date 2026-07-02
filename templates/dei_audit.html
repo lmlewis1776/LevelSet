@@ -9,7 +9,7 @@
         <p>Evaluate your organization across 5 critical dimensions of Diversity, Equity, and Inclusion. Each dimension has 4 questions. Answer honestly for the most accurate results.</p>
     </div>
 
-    <form method="POST" action="/dei-audit" id="dei-audit-form">
+    <form method="POST" action="/dei-audit" id="dei-audit-form" novalidate>
         {% for dimension in dimensions %}
         <div class="tool-section">
             <h2>{{ dimension.name }}</h2>
