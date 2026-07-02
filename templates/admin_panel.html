@@ -79,7 +79,7 @@
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">{{ a.email }}</td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
                                     <span class="report-type {{ a.report_type }}" style="font-size:0.75rem;">
-                                        {{ a.report_type|replace('_', ' ')|title }}
+                                        {{% if a.report_type == 'tech_assessment' %}BC/DR Assessment{% else %}Organizational Health Assessment{% endif %}}
                                     </span>
                                 </td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
