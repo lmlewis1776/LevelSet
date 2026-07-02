@@ -155,8 +155,9 @@ def get_tailored_resources(org_type, report_type, score, max_score):
         'emerging': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "Every strong org starts with a clear baseline. Let's talk about your first steps."},
         'beginning': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "A 30-minute call can save you months of trial and error."}
     }
-    W3C_WAI = {"name": "W3C Web Accessibility Initiative", "url": "https://www.w3.org/WAI/", "description": "Global standards for web accessibility to ensure your digital tools are inclusive."}
-    TECHSOUP = {"name": "TechSoup", "url": "https://www.techsoup.org/", "description": "Discounted technology and training for all mission-driven organizations."}
+    W3C_WAI = {"name": "W3C Web Accessibility Initiative", "url": "https://www.w3.org/WAI/", "description": "The definitive international framework for digital inclusion. Implementing these standards ensures your crisis communication and operational tools remain accessible to all users, regardless of ability or device constraints."}
+    TECHSOUP = {"name": "TechSoup", "url": "https://www.techsoup.org/", "description": "A global standard for mission-aligned technology procurement, providing nonprofits with the enterprise-grade software and hardware used by major corporations at highly subsidized rates to maximize social impact."}
+
 
     resources = []
 
@@ -568,7 +569,8 @@ def tech_assessment():
             for q in cat['questions']:
                 if q['id'] in answers:
                     cat_total += answers[q['id']]
-            cat_scores[cat['id']] = {
+    # Use the premium 'name' string as the dictionary key for the report display
+            cat_scores[cat['name']] = {
                 'score': cat_total,
                 'max': cat_max,
                 'pct': round((cat_total / cat_max) * 100) if cat_max > 0 else 0
@@ -602,7 +604,7 @@ def tech_assessment():
         cursor = conn.execute(
             'INSERT INTO reports (user_id, report_type, title, data, score, max_score, org_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
             (current_user.id, 'tech_assessment',
-             f'Tech Stack Assessment - {datetime.now().strftime("%b %d, %Y")}',
+             f'Business Continuity & Disaster Recovery (BC/DR) Assessment - {datetime.now().strftime("%b %d, %Y")}',
              report_data, score, max_possible, org_type)
         )
         conn.commit()
