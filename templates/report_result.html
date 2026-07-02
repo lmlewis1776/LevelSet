@@ -71,7 +71,7 @@
             <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1rem;">
                 {% for cat_id, cat_data in data.category_scores.items() %}
                 <div class="dimension-score">
-                    <span class="dim-name">{{ cat_id|replace('_', ' ')|title }}</span>
+                    <span class="dim-name">{{ cat_id }}</span>
                     <div style="display:flex; align-items:center; gap:1rem;">
                         <div style="width: 120px; height: 8px; background: var(--gray-200); border-radius: 4px;">
                             <div style="width: {{ cat_data.pct }}%; height: 100%; background: var(--secondary); border-radius: 4px;"></div>
