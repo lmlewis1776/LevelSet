@@ -5,8 +5,12 @@
 <section class="report-result">
     <div class="result-header">
         <span class="report-type {{ report.report_type }}" style="margin-bottom:0.5rem; display:inline-block;">
+            {% if report.report_type == 'tech_assessment' %}
+                BC/DR Assessment
+        {% else %}
             {{ report.report_type|replace('_', ' ')|title }}
-        </span>
+        {% endif %}
+</span>
         <h1>{{ report.title }}</h1>
         <p style="color: var(--gray-500);">Created {{ report.created_at }}</p>
     </div>
