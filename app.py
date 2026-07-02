@@ -138,19 +138,78 @@ def inject_globals():
 
 import random
 
-# Readiness resources for assessment reports
-PLACEHOLDER_ORG_RESOURCES = {
-    'nonprofit': '[Nonprofit resources — pending owner approval. Examples: capacity-building grants, nonprofit management tools, board development guides.]',
-    'forprofit': '[For-profit resources — pending owner approval. Examples: workplace culture assessments, talent retention strategies, inclusive leadership frameworks.]',
-    'government': '[Government/municipal resources — pending owner approval. Examples: public sector equity frameworks, community engagement toolkits, compliance guidance.]',
-    'other': '[General resources — pending owner approval. Examples: organizational health benchmarks, change management guides, strategic planning templates.]',
-    '': '[General resources — pending owner approval. Generic organizational development resources applicable across sectors.]'
-}
+# Tailored resources based on Org Type and Assessment Score
+def get_tailored_resources(org_type, report_type, score, max_score):
+    percentage = (score / max_score * 100) if max_score > 0 else 0
+    
+    # Determine score band
+    if percentage >= 80: band = 'advanced'
+    elif percentage >= 55: band = 'developing'
+    elif percentage >= 30: band = 'emerging'
+    else: band = 'beginning'
 
-DEFAULT_ORG_TYPE = ''
+    # Global Resources
+    CALENDLY = {
+        'advanced': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "You're ahead of the curve. Let's map your next stage of growth."},
+        'developing': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "Solid foundation. Let's prioritize your next 90 days."},
+        'emerging': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "Every strong org starts with a clear baseline. Let's talk about your first steps."},
+        'beginning': {"name": "Calendly Consult", "url": "https://calendly.com/lmlewisconsulting", "description": "A 30-minute call can save you months of trial and error."}
+    }
+    W3C_WAI = {"name": "W3C Web Accessibility Initiative", "url": "https://www.w3.org/WAI/", "description": "Global standards for web accessibility to ensure your digital tools are inclusive."}
+    TECHSOUP = {"name": "TechSoup", "url": "https://www.techsoup.org/", "description": "Discounted technology and training for all mission-driven organizations."}
 
-def get_resources_for_org(org_type):
-    return PLACEHOLDER_ORG_RESOURCES.get(org_type, PLACEHOLDER_ORG_RESOURCES[''])
+    resources = []
+
+    if report_type == 'dei_audit':
+        data = {
+            'nonprofit': {
+                'advanced': [{"name": "BoardSource", "url": "https://boardsource.org/", "description": "Governance self-assessment for mature boards."}, {"name": "SSIR", "url": "https://ssir.org/", "description": "Organizational effectiveness case studies."}],
+                'developing': [{"name": "National Council of Nonprofits", "url": "https://www.councilofnonprofits.org/", "description": "HR policies, board roles, and strategic planning."}, {"name": "Candid", "url": "https://candid.org/", "description": "Transparency and nonprofit benchmark data."}],
+                'emerging': [{"name": "Nonprofit Risk Management Center", "url": "https://www.nonprofitrisk.org/", "description": "Policies, compliance, and board basics."}, {"name": "Free Management Library", "url": "https://managementhelp.org/", "description": "HR, governance, and planning templates."}],
+                'beginning': [{"name": "Idealist", "url": "https://www.idealist.org/", "description": "Community of practice for new social impact leaders."}, {"name": "SCORE", "url": "https://www.score.org/", "description": "Free mentoring for nonprofit leaders."}]
+            },
+            'forprofit': {
+                'advanced': [{"name": "Great Place to Work", "url": "https://www.greatplacetowork.com/", "description": "Workplace culture certification and benchmarking."}, {"name": "Gallup Workplace", "url": "https://www.gallup.com/workplace/", "description": "Data-driven employee engagement measurement."}],
+                'developing': [{"name": "SHRM", "url": "https://www.shrm.org/", "description": "HR best practices and talent pathways."}, {"name": "Project Include", "url": "https://projectinclude.org/", "description": "Inclusion frameworks for tech companies."}],
+                'emerging': [{"name": "Culture Amp", "url": "https://www.cultureamp.com/resources", "description": "Employee survey design and culture building."}, {"name": "First Round Review", "url": "https://review.firstround.com/", "description": "Culture-building insights for startups."}],
+                'beginning': [{"name": "Founder Institute", "url": "https://fi.co/", "description": "Startup founder resources and peer network."}, {"name": "Kickbox", "url": "https://kickbox.adobe.com/", "description": "Innovation framework for small teams."}]
+            },
+            'government': {
+                'advanced': [{"name": "National League of Cities", "url": "https://www.nlc.org/", "description": "Racial equity and municipal governance resources."}, {"name": "ICMA", "url": "https://icma.org/", "description": "Professional local government management."}],
+                'developing': [{"name": "Governing Institute", "url": "https://www.governing.com/", "description": "Public-sector management and innovation."}, {"name": "HKS Gov Performance Lab", "url": "https://govlab.hks.harvard.edu/", "description": "Evidence-based public management."}],
+                'emerging': [{"name": "ELGL", "url": "https://elgl.org/", "description": "Professional network for local gov leaders."}, {"name": "What Works Cities", "url": "https://whatworkscities.bloomberg.org/", "description": "Data-driven city management resources."}],
+                'beginning': [{"name": "GSA Digital.gov", "url": "https://digital.gov/", "description": "Public-sector digital service guides."}, {"name": "Ballotpedia", "url": "https://ballotpedia.org/", "description": "Transparency and governance resources."}]
+            }
+        }
+        type_data = data.get(org_type, data['nonprofit']) # Fallback to nonprofit
+        resources = type_data.get(band, [])
+    
+    elif report_type == 'tech_assessment':
+        # Tech assessment specific resources including W3C and TechSoup global swaps
+        if org_type == 'nonprofit':
+            if band == 'advanced': resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Nonprofit technology training and community."}, {"name": "Idealware", "url": "https://idealware.org/", "description": "Software reviews and planning."}, W3C_WAI]
+            elif band == 'developing': resources = [TECHSOUP, W3C_WAI]
+            elif band == 'emerging': resources = [{"name": "Digital.gov", "url": "https://digital.gov/", "description": "Accessibility and user experience guides."}, {"name": "Mozilla Web Literacy", "url": "https://foundation.mozilla.org/", "description": "Digital skills and web literacy."}]
+            else: resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Low-cost internet and devices."}, TECHSOUP]
+        elif org_type == 'forprofit':
+            if band == 'advanced': resources = [{"name": "Gartner IT", "url": "https://www.gartner.com/en/information-technology", "description": "IT strategy and benchmarking."}, {"name": "NIST Framework", "url": "https://www.nist.gov/cyberframework", "description": "Security maturity assessment."}, W3C_WAI]
+            elif band == 'developing': resources = [{"name": "CIO Magazine", "url": "https://www.cio.com/", "description": "Tech leadership and strategy."}, {"name": "Atlassian Playbook", "url": "https://www.atlassian.com/team-playbook", "description": "Collaboration tools and practices."}]
+            elif band == 'emerging': resources = [{"name": "DigitalOcean", "url": "https://www.digitalocean.com/community", "description": "Cloud infrastructure tutorials."}, {"name": "Stripe Resources", "url": "https://stripe.com/resources", "description": "Operations and payment guides."}]
+            else: resources = [{"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills training."}, {"name": "SBA Technology", "url": "https://www.sba.gov/business-guide/manage-your-business/technology", "description": "SBA tech guides."}]
+        elif org_type == 'government':
+            if band == 'advanced': resources = [{"name": "18F", "url": "https://18f.gsa.gov/", "description": "Digital service delivery frameworks."}, {"name": "NASCIO", "url": "https://www.nascio.org/", "description": "State CIO resources."}, W3C_WAI]
+            elif band == 'developing': resources = [{"name": "GSA TTS", "url": "https://www.gsa.gov/technology", "description": "Federal technology resources."}, {"name": "Digital Government", "url": "https://www.govtech.com/cdg/", "description": "Public sector best practices."}]
+            elif band == 'emerging': resources = [{"name": "U.S. Digital Response", "url": "https://www.usdigitalresponse.org/", "description": "Pro bono tech support for government."}, {"name": "What Works Cities", "url": "https://whatworkscities.bloomberg.org/", "description": "Data-driven city tech."}]
+            else: resources = [{"name": "Civic Tech Field Guide", "url": "https://civictech.guide/", "description": "Community-driven civic tech resources."}, {"name": "Code for America", "url": "https://brigade.codeforamerica.org/", "description": "Local volunteer tech support."}]
+        else: # Other / Fallback
+            if band == 'advanced': resources = [{"name": "NTEN", "url": "https://www.nten.org/", "description": "Mission-driven tech community."}, W3C_WAI]
+            elif band == 'developing': resources = [TECHSOUP, W3C_WAI]
+            elif band == 'emerging': resources = [{"name": "Digital.gov Accessibility", "url": "https://digital.gov/resources/accessibility/", "description": "Free accessibility guides."}, TECHSOUP]
+            else: resources = [{"name": "EveryoneOn", "url": "https://www.everyoneon.org/", "description": "Affordable internet and devices."}, {"name": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/", "description": "Free digital skills."}]
+
+    # Always add Calendly with the tailored upsell message
+    resources.append(CALENDLY[band])
+    return resources
 
 @app.route('/')
 def index():
@@ -585,12 +644,17 @@ def report_result(report_id):
     
     report_data = json.loads(report['data'])
     
-    # Get org-type tailored resources
-    org_type = report['org_type'] or ''
-    org_resources = get_resources_for_org(org_type)
+# Get tailored resources based on score and org type
+    org_type = report['org_type'] or 'other'
+    resources = get_tailored_resources(org_type, report['report_type'], report['score'], report['max_score'])
     
-    return render_template('report_result.html', report=report, data=report_data, is_paid=is_paid, org_resources=org_resources, org_type=org_type)
-
+    return render_template('report_result.html', 
+                         report=report, 
+                         data=report_data, 
+                         is_paid=is_paid, 
+                         resources=resources, 
+                         org_type=org_type)
+    
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
 def pay_for_report(report_id):
