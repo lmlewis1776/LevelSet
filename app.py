@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from functools import wraps
@@ -11,6 +13,17 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 if not app.secret_key:
     raise RuntimeError("SECRET_KEY environment variable is not set. Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\"")
+
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = '://gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
+
+mail = Mail(app)
+serializer = URLSafeTimedSerializer(app.secret_key)
 
 # Database setup
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'levelsethq.db')
@@ -340,41 +353,25 @@ def signup():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        # Honeypot silent bot check
+        if request.form.get('website_verify'):
+            return render_template('login.html')
+
         email = request.form.get('email')
         password = request.form.get('password')
-        captcha_answer = request.form.get('captcha', '')
-        captcha_expected = session.get('captcha_answer', 0)
-        
-        if str(captcha_answer).strip() != str(captcha_expected).strip():
-            flash('Incorrect CAPTCHA answer. Please try again.', 'error')
-            # Generate new CAPTCHA
-            a = random.randint(3, 12)
-            b = random.randint(3, 12)
-            session['captcha_answer'] = a + b
-            session['captcha_question'] = f"What is {a} + {b}?"
-            return render_template('login.html')
-        
         conn = get_db()
         user_data = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
         conn.close()
         
         if user_data and check_password_hash(user_data['password_hash'], password):
-            user = User(user_data['id'], user_data['email'], user_data['name'], 
-                       user_data['organization'], user_data['role'], user_data['plan'])
+            user = User(user_data['id'], user_data['email'], user_data['name'], user_data['organization'], user_data['role'], user_data['plan'])
             login_user(user)
             flash('Welcome back!', 'success')
             if current_user.role == 'admin':
                 return redirect(url_for('admin_panel'), 303)
             return redirect(url_for('dashboard'), 303)
-        
+            
         flash('Invalid email or password', 'error')
-    
-    # Generate CAPTCHA for GET request
-    a = random.randint(3, 12)
-    b = random.randint(3, 12)
-    session['captcha_answer'] = a + b
-    session['captcha_question'] = f"What is {a} + {b}?"
-    
     return render_template('login.html')
 
 @app.route('/logout')
@@ -382,6 +379,76 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        # Honeypot silent bot check
+        if request.form.get('website_verify'):
+            return render_template('forgot_password.html')
+
+        email = request.form.get('email')
+        if not email:
+            flash('Email address is required.', 'error')
+            return render_template('forgot_password.html')
+            
+        conn = get_db()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+        conn.close()
+        
+        if user:
+            token = serializer.dumps(email, salt='password-reset-salt')
+            reset_url = url_for('reset_password', token=token, _external=True)
+            
+            msg = Message("Password Reset Request — LevelSet", recipients=[email])
+            msg.body = f"Hello {user['name']},\n\nWe received a request to reset your password for your LevelSet account. This link will expire in 15 minutes.\n\nTo reset your password, please click the following link:\n{reset_url}\n\nBest regards,\nL. M. Lewis Consulting"
+            msg.html = f"""<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <h2 style="color: #6C3BBA; margin-bottom: 20px;">LevelSet Password Reset</h2>
+                <p>Hello <strong>{user['name']}</strong>,</p>
+                <p>We received a request to reset your password for your LevelSet account. This link will expire in 15 minutes.</p>
+                <p style="margin: 30px 0;"><a href="{reset_url}" style="background-color: #6C3BBA; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Reset Password</a></p>
+                <p style="color: #6b7280; font-size: 0.9rem; margin-top: 30px;">If you did not request a password reset, you can safely ignore this email.</p>
+            </div>"""
+            try:
+                mail.send(msg)
+            except Exception as e:
+                print(f"SMTP sending failed: {e}")
+                print(f"DEVELOPMENT LOG - Password Reset URL: {reset_url}")
+
+        flash('An email has been sent with instructions to reset your password.', 'success')
+        return redirect(url_for('login'), 303)
+        
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=900)
+    except Exception:
+        flash('The password reset link is invalid or has expired.', 'error')
+        return redirect(url_for('forgot_password'))
+        
+    if request.method == 'POST':
+        if request.form.get('website_verify'):
+            return render_template('reset_password.html', token=token)
+
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password:
+            flash('Please enter a new password.', 'error')
+        elif new_password != confirm_password:
+            flash('Passwords do not match. Please try again.', 'error')
+        else:
+            password_hash = generate_password_hash(new_password)
+            conn = get_db()
+            conn.execute('UPDATE users SET password_hash = ? WHERE email = ?', (password_hash, email))
+            conn.commit()
+            conn.close()
+            flash('Your password has been securely reset! Please log in.', 'success')
+            return redirect(url_for('login'), 303)
+            
+    return render_template('reset_password.html', token=token)
 
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
