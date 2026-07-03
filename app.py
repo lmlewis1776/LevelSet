@@ -383,6 +383,29 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password:
+            flash('Please enter a new password.', 'error')
+        elif new_password != confirm_password:
+            flash('Passwords do not match. Please try again.', 'error')
+        else:
+            # Securely generate hash and update user details in SQLite database
+            password_hash = generate_password_hash(new_password)
+            conn = get_db()
+            conn.execute('UPDATE users SET password_hash = ? WHERE id = ?', (password_hash, current_user.id))
+            conn.commit()
+            conn.close()
+            flash('Your password has been securely updated!', 'success')
+            return redirect(url_for('account'), 303)
+            
+    return render_template('account.html')
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
