@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Account & Security Hub — LevelSet{% endblock %}
+
+{% block content %}
+<section class="section" style="background-color: var(--gray-50); min-height: 80vh; padding: 3rem 1.5rem;">
+    <div class="container" style="max-width: 800px;">
+        
+        <!-- Header -->
+        <div style="margin-bottom: 2.5rem;">
+            <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--gray-900); margin-bottom: 0.5rem;">Account Settings</h1>
+            <p style="color: var(--gray-600); font-size: 1.1rem;">Manage your profile, security settings, and view your current subscription details.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+            
+            <!-- Card 1: Profile & Subscription Details -->
+            <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray-100); padding-bottom: 1rem;">
+                    <h2 style="font-size: 1.5rem; color: var(--gray-800); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.75rem;">👤</span> Profile Details
+                    </h2>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                    <div>
+                        <span style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400); display: block; margin-bottom: 0.25rem;">Full Name</span>
+                        <span style="font-size: 1.1rem; color: var(--gray-800); font-weight: 500;">{{ current_user.name }}</span>
+                    </div>
+                    
+                    <div>
+                        <span style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400); display: block; margin-bottom: 0.25rem;">Email Address</span>
+                        <span style="font-size: 1.1rem; color: var(--gray-800); font-weight: 500;">{{ current_user.email }}</span>
+                    </div>
+
+                    <div>
+                        <span style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400); display: block; margin-bottom: 0.25rem;">Organization</span>
+                        <span style="font-size: 1.1rem; color: var(--gray-800); font-weight: 500;">{{ current_user.organization if current_user.organization else 'Not Specified' }}</span>
+                    </div>
+
+                    <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; border: 1px solid var(--gray-100);">
+                        <div>
+                            <span style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); display: block; margin-bottom: 0.25rem;">Active Plan</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="badge badge-{{ current_user.plan }}" style="font-size: 0.95rem; padding: 0.25rem 0.75rem; font-weight: 600;">
+                                    {{ current_user.plan|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="/pricing" class="btn btn-outline btn-sm" style="font-weight: 600; padding: 0.5rem 1rem;">
+                                {% if current_user.plan == 'subscription' %}View Plans{% else %}Upgrade Plan{% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Security & Password Update -->
+            <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray-100); padding-bottom: 1rem;">
+                    <h2 style="font-size: 1.5rem; color: var(--gray-800); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.75rem;">🔑</span> Change Password
+                    </h2>
+                </div>
+
+                <form method="POST" action="/account" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="new_password" style="font-weight: 600; color: var(--gray-700);">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="form-control" required placeholder="Minimally 8 characters recommended">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="confirm_password" style="font-weight: 600; color: var(--gray-700);">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required placeholder="Retype your new password">
+                    </div>
+
+                    <div style="margin-top: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-weight: 600;">Update Password</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock %}
