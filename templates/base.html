@@ -32,6 +32,7 @@
                         <span class="user-name">{{ current_user.name.split()[0] }}</span>
                         <div class="dropdown-menu">
                             <a href="/dashboard">Dashboard</a>
+                            <a href="/account">Account Settings</a>
                             <a href="/pricing">Pricing & Plans</a>
                             {% if current_user.plan == 'subscription' %}
                             <a href="/manage-subscription">Manage Subscription</a>
