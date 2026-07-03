@@ -12,14 +12,14 @@
             <div class="pricing-card">
                 <h2>Free</h2>
                 <div class="price">$0<span>/month</span></div>
-                <p class="description">Try before you buy — no risk</p>
+                <p class="description">Establish your initial organizational baseline risk profile</p>
                 <ul class="pricing-features">
-                    <li>1 free self-assessment report</li>
-                    <li>Basic checklist tools</li>
-                    <li>Email support</li>
-                    <li class="disabled">Detailed scored results</li>
-                    <li class="disabled">Unlimited reports</li>
-                    <li class="disabled">Priority support</li>
+                    <li>1 Free Assessment Run</li>
+                    <li>Top-Level Score & Badges</li>
+                    <li>Baseline Category Breakdown Charts</li>
+                    <li>Next-Step Authority Resource Links</li>
+                    <li class="disabled">Premium Consultative Analysis</li>
+                    <li class="disabled">Unlimited 'Run Again' Access</li>
                 </ul>
                 {% if current_user.is_authenticated %}
                     <p style="color: var(--gray-500); font-size:0.9rem;">You're on the Free plan</p>
@@ -30,17 +30,18 @@
 
             <div class="pricing-card featured">
                 <div class="pricing-badge">Most Popular</div>
+                <div class="pricing-badge">Most Popular</div>
                 <h2>Pay-Per-Report</h2>
                 <div class="price">$49<span>/report</span></div>
-                <p class="description">Pay only when you need a detailed report</p>
+                <p class="description">Pay only when you need deep corporate advisory roadmaps</p>
                 <ul class="pricing-features">
-                    <li>Detailed scored report</li>
-                    <li>Dimension-by-dimension breakdown</li>
-                    <li>Actionable recommendations</li>
-                    <li>Downloadable results</li>
-                    <li>Pay only when you need it</li>
-                    <li class="disabled">Unlimited reports</li>
-                </ul>
+                    <li>All Baseline Data Included</li>
+                    <li>🔒 Unlocked Premium Consultative Analysis</li>
+                    <li>Multi-Paragraph Expert Strategy Prose</li>
+                    <li>Strategic Corporate Triage Checklists</li>
+                    <li>Flat Payment — No Monthly Retainers</li>
+                    <li class="disabled">Unlimited 'Run Again' Access</li>
+                </ul>                
                 <!-- Live Pay-Per-Report PayPal Engine Integration -->
                 {% if current_user.is_authenticated %}
                     {% if request.args.get('report_id') %}
@@ -59,15 +60,15 @@
             <div class="pricing-card">
                 <h2>Subscription</h2>
                 <div class="price">$49<span>/month</span></div>
-                <p class="description">Best value for regular use</p>
+                <p class="description">Continuous evaluation infrastructure for scaling teams</p>
                 <ul class="pricing-features">
-                    <li>Unlimited assessments</li>
-                    <li>All scored reports unlocked</li>
-                    <li>Track progress over time</li>
-                    <li>Downloadable PDFs</li>
-                    <li>Priority email support</li>
-                    <li>Cancel anytime</li>
-                </ul>
+                    <li>Endless 'Run Again' Privileges</li>
+                    <li>Continuous Progress Monitoring</li>
+                    <li>Unlimited Premium Analysis Unlocks</li>
+                    <li>Multi-Report Dashboard Archival</li>
+                    <li>Priority Executive Email Support</li>
+                    <li>Cancel Anytime</li>
+                </ul>                
                 {% if current_user.is_authenticated %}
                     {% if current_user.plan == 'subscription' %}
                         <p style="color: var(--secondary); font-weight:600;">✓ You're subscribed!</p>
