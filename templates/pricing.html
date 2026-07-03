@@ -87,4 +87,32 @@
 
 {% block extra_scripts %}
 <script src="https://paypal.com" data-sdk-integration-source="button-factory"></script>
+<script>
+    // Dynamically render active PayPal modules upon template injection
+    document.addEventListener("DOMContentLoaded", function() {
+        if (document.getElementById('paypal-button-container')) {
+            paypal.Buttons({
+                style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: { value: '49.00' },
+                            custom_id: document.getElementById('paypal-button-container').getAttribute('data-report-id')
+                        }]
+                    });
+                }
+            }).render('#paypal-button-container');
+        }
+        if (document.getElementById('paypal-button-container-upgrade')) {
+            paypal.Buttons({
+                style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{ amount: { value: '49.00' } }]
+                    });
+                }
+            }).render('#paypal-button-container-upgrade');
+        }
+    });
+</script>
 {% endblock %}
