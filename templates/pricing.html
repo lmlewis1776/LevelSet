@@ -1,51 +1,47 @@
 {% extends "base.html" %}
-
 {% block title %}Pricing — LevelSet{% endblock %}
 
 {% block content %}
-<section class="pricing-section">
+<section class="section" style="padding-top: 3rem;">
     <div class="container">
-        
-        <div class="pricing-header" style="text-align: center; margin-bottom: 3rem;">
-            <h1>Simple, Value-Driven Pricing</h1>
-            <p style="color: var(--gray-500); max-width: 600px; margin: 0.5rem auto 0 auto;">
-                Establish your baseline digital resilience or unlock deep, multi-paragraph corporate strategic triage roadmaps written in our expert consulting voice.
-            </p>
+        <div class="section-title">
+            <h1>Simple, Transparent Pricing</h1>
+            <p>Get the insights you need at a price you can afford. Powered by L. M. Lewis Consulting.</p>
         </div>
-
-        <div class="pricing-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
-            
-            <!-- FREE CARD -->
-            <div class="pricing-card" style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
-                <h3>Free Tier</h3>
-                <div class="price" style="font-size: 2.5rem; font-weight: 800; color: var(--text); margin: 1rem 0;">$0</div>
-                <p class="description" style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1.5rem;">Establish your initial organizational baseline risk profile</p>
-                <ul class="pricing-features" style="list-style: none; padding: 0; margin: 0 0 2rem 0; display: flex; flex-direction: column; gap: 0.75rem; color: var(--gray-600); font-size: 0.95rem;">
-                    <li>1 Free Assessment Run</li>
-                    <li>Top-Level Score & Badges</li>
-                    <li>Baseline Category Breakdown Charts</li>
-                    <li>Next-Step Authority Resource Links</li>
+        <div class="pricing-grid" style="margin-bottom: 3rem;">
+            <div class="pricing-card">
+                <h2>Free</h2>
+                <div class="price">$0<span>/month</span></div>
+                <p class="description">Try before you buy — no risk</p>
+                <ul class="pricing-features">
+                    <li>1 free self-assessment report</li>
+                    <li>Basic checklist tools</li>
+                    <li>Email support</li>
+                    <li class="disabled">Detailed scored results</li>
+                    <li class="disabled">Unlimited reports</li>
+                    <li class="disabled">Priority support</li>
                 </ul>
                 {% if current_user.is_authenticated %}
-                    <a href="/dashboard" class="btn btn-outline" style="width:100%; display: block; text-align: center;">Go to Dashboard</a>
+                    <p style="color: var(--gray-500); font-size:0.9rem;">You're on the Free plan</p>
                 {% else %}
-                    <a href="/signup" class="btn btn-outline" style="width:100%; display: block; text-align: center;">Sign Up Free</a>
+                    <a href="/signup" class="btn btn-outline" style="width:100%;">Get Started Free</a>
                 {% endif %}
             </div>
 
-            <!-- PAY-PER-REPORT CARD (FEATURED) -->
-            <div class="pricing-card featured" style="background: var(--white); border: 2px solid var(--primary); border-radius: var(--radius-lg); padding: 2rem; position: relative; box-shadow: var(--shadow-md);">
-                <div class="pricing-badge" style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Most Popular</div>
-                <h3>Pay-Per-Report</h3>
-                <div class="price" style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 1rem 0;">$49<span style="font-size: 1rem; font-weight: 400; color: var(--gray-500);"> / report</span></div>
-                <p class="description" style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1.5rem;">Pay only when you need deep corporate advisory roadmaps</p>
-                <ul class="pricing-features" style="list-style: none; padding: 0; margin: 0 0 2rem 0; display: flex; flex-direction: column; gap: 0.75rem; color: var(--gray-600); font-size: 0.95rem;">
-                    <li><strong>All Baseline Data Included</strong></li>
-                    <li>🔒 Unlocked Premium Consultative Analysis</li>
-                    <li>Multi-Paragraph Expert Strategy Prose</li>
-                    <li>Strategic Corporate Triage Checklists</li>
-                    <li>Flat Payment — No Monthly Retainers</li>
+            <div class="pricing-card featured">
+                <div class="pricing-badge">Most Popular</div>
+                <h2>Pay-Per-Report</h2>
+                <div class="price">$49<span>/report</span></div>
+                <p class="description">Pay only when you need a detailed report</p>
+                <ul class="pricing-features">
+                    <li>Detailed scored report</li>
+                    <li>Dimension-by-dimension breakdown</li>
+                    <li>Actionable recommendations</li>
+                    <li>Downloadable results</li>
+                    <li>Pay only when you need it</li>
+                    <li class="disabled">Unlimited reports</li>
                 </ul>
+                <!-- Live Pay-Per-Report PayPal Engine Integration -->
                 {% if current_user.is_authenticated %}
                     {% if request.args.get('report_id') %}
                         <p style="font-size:0.85rem; color:#16a34a; font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
@@ -56,87 +52,67 @@
                         <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Get Started (Pay-Per-Report)</a>
                     {% endif %}
                 {% else %}
-                    <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem; display: block; text-align: center;">Get Started</a>
+                    <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem;">Get Started</a>
                 {% endif %}
             </div>
 
-            <!-- SUBSCRIPTION CARD -->
-            <div class="pricing-card" style="background: #F5F3FF; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
-                <h3>Subscription</h3>
-                <div class="price" style="font-size: 2.5rem; font-weight: 800; color: var(--text); margin: 1rem 0;">$49<span style="font-size: 1rem; font-weight: 400; color: var(--gray-500);"> / mo</span></div>
-                <p class="description" style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1.5rem;">Continuous evaluation infrastructure for scaling teams</p>
-                <ul class="pricing-features" style="list-style: none; padding: 0; margin: 0 0 2rem 0; display: flex; flex-direction: column; gap: 0.75rem; color: var(--gray-600); font-size: 0.95rem;">
-                    <li>Endless 'Run Again' Privileges</li>
-                    <li>Continuous Progress Monitoring</li>
-                    <li>Unlimited Premium Analysis Unlocks</li>
-                    <li>Multi-Report Dashboard Archival</li>
-                    <li>Priority Executive Email Support</li>
+            <div class="pricing-card">
+                <h2>Subscription</h2>
+                <div class="price">$49<span>/month</span></div>
+                <p class="description">Best value for regular use</p>
+                <ul class="pricing-features">
+                    <li>Unlimited assessments</li>
+                    <li>All scored reports unlocked</li>
+                    <li>Track progress over time</li>
+                    <li>Downloadable PDFs</li>
+                    <li>Priority email support</li>
+                    <li>Cancel anytime</li>
                 </ul>
-                {% if current_user.plan == 'subscription' %}
-                    <p style="color: var(--secondary); font-weight: 600; text-align: center; margin-top: 1rem;">✓ Active On Your Plan</p>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.plan == 'subscription' %}
+                        <p style="color: var(--secondary); font-weight:600;">✓ You're subscribed!</p>
+                    {% else %}
+                        <div id="paypal-button-container" data-paypal-button="upgrade" data-amount="49.00"></div>
+                    {% endif %}
                 {% else %}
-                    <div id="paypal-button-container-upgrade" data-paypal-button="upgrade" data-amount="49.00" style="margin-top: 1rem;"></div>
+                    <a href="/signup" class="btn btn-secondary" style="width:100%;">Subscribe Now</a>
                 {% endif %}
             </div>
-
         </div>
 
+        <!-- FAQ -->
+        <div style="max-width: 700px; margin: 0 auto;">
+            <h2 style="text-align:center; margin-bottom: 2rem;">Frequently Asked Questions</h2>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">What do I get with the free plan?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">You get one free self-assessment report of your choice. After that, you can purchase individual reports for $49 each or subscribe for unlimited access.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Can I switch plans later?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Absolutely! You can upgrade from Free to Subscription at any time, or cancel your subscription and move back to Free.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">How are the assessments scored?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Each assessment uses a weighted scoring system across multiple dimensions. Your results include an overall score, dimension-by-dimension breakdown, and actionable recommendations.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Who is behind LevelSet?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">LevelSet is powered by L. M. Lewis Consulting, bringing 15+ years of organizational health and corporate resilience consulting expertise into an affordable SaaS platform.</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size:1rem; margin-bottom:0.5rem;">Is my data secure?</h4>
+                <p style="color:var(--gray-600); font-size:0.95rem;">Yes. All assessment data is encrypted and stored securely. We never share your organization's data with third parties.</p>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://paypal.com"></script>
-<script>
-    // Force absolute immediate render of the billing interface
-    function initPayPal() {
-        var reportContainer = document.getElementById('paypal-button-container');
-        var upgradeContainer = document.getElementById('paypal-button-container-upgrade');
-
-        if (reportContainer && reportContainer.children.length === 0) {
-            var reportId = reportContainer.getAttribute('data-report-id');
-            paypal.Buttons({
-                style: { layout: 'vertical', color: 'gold', shape: 'rect' },
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            amount: { value: '49.00' },
-                            description: "Premium Executive Report Unlock",
-                            custom_id: reportId
-                        }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        window.location.href = "/dashboard?payment=success&report_id=" + reportId;
-                    });
-                }
-            }).render('#paypal-button-container');
-        }
-
-        if (upgradeContainer && upgradeContainer.children.length === 0) {
-            paypal.Buttons({
-                style: { layout: 'vertical', color: 'blue', shape: 'rect' },
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            amount: { value: '49.00' },
-                            description: "LevelSet Premium Monthly Subscription Plan"
-                        }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        window.location.href = "/dashboard?subscription=success";
-                    });
-                }
-            }).render('#paypal-button-container-upgrade');
-        }
-    }
-
-    // Run on immediate page load and backup window injection
-    document.addEventListener("DOMContentLoaded", initPayPal);
-    window.onload = initPayPal;
-    setTimeout(initPayPal, 1000); // 1-second safety fallback loop
-</script>
+<script src="https://www.paypal.com/sdk/js?client-id=AauqNq8xPGUgJfp50zkRQSw5wBAPTyybLmTlPkDejgQFEAbm6eVvPi-Y8eGn61aQv-NrZuLo4Ty5w1-W&currency=USD" data-sdk-integration-source="button-factory"></script>
 {% endblock %}
