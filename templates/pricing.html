@@ -86,33 +86,57 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://paypal.com" data-sdk-integration-source="button-factory"></script>
+<script src="https://paypal.com"></script>
 <script>
-    // Dynamically render active PayPal modules upon template injection
-    document.addEventListener("DOMContentLoaded", function() {
-        if (document.getElementById('paypal-button-container')) {
+    // Force absolute immediate render of the billing interface
+    function initPayPal() {
+        var reportContainer = document.getElementById('paypal-button-container');
+        var upgradeContainer = document.getElementById('paypal-button-container-upgrade');
+
+        if (reportContainer && reportContainer.children.length === 0) {
+            var reportId = reportContainer.getAttribute('data-report-id');
             paypal.Buttons({
-                style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+                style: { layout: 'vertical', color: 'gold', shape: 'rect' },
                 createOrder: function(data, actions) {
                     return actions.order.create({
                         purchase_units: [{
                             amount: { value: '49.00' },
-                            custom_id: document.getElementById('paypal-button-container').getAttribute('data-report-id')
+                            description: "Premium Executive Report Unlock",
+                            custom_id: reportId
                         }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        window.location.href = "/dashboard?payment=success&report_id=" + reportId;
                     });
                 }
             }).render('#paypal-button-container');
         }
-        if (document.getElementById('paypal-button-container-upgrade')) {
+
+        if (upgradeContainer && upgradeContainer.children.length === 0) {
             paypal.Buttons({
-                style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+                style: { layout: 'vertical', color: 'blue', shape: 'rect' },
                 createOrder: function(data, actions) {
                     return actions.order.create({
-                        purchase_units: [{ amount: { value: '49.00' } }]
+                        purchase_units: [{
+                            amount: { value: '49.00' },
+                            description: "LevelSet Premium Monthly Subscription Plan"
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        window.location.href = "/dashboard?subscription=success";
                     });
                 }
             }).render('#paypal-button-container-upgrade');
         }
-    });
+    }
+
+    // Run on immediate page load and backup window injection
+    document.addEventListener("DOMContentLoaded", initPayPal);
+    window.onload = initPayPal;
+    setTimeout(initPayPal, 1000); // 1-second safety fallback loop
 </script>
 {% endblock %}
