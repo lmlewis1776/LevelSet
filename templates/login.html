@@ -1,35 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Log In — LevelSet{% endblock %}
-
 {% block content %}
-<section class="auth-page">
-    <div class="auth-card">
-        <h1>Welcome Back</h1>
-        <p class="subtitle">Log in to access your assessments and reports.</p>
-        
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" class="form-control" required placeholder="you@organization.org">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required placeholder="Your password">
-            </div>
-            
-            <div class="form-group">
-                <label for="captcha">{{ session['captcha_question'] }}</label>
-                <input type="text" id="captcha" name="captcha" class="form-control" required placeholder="Enter your answer">
-                <div class="form-hint">Simple math to verify you're human</div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width:100%;">Log In</button>
-        </form>
-        
-        <p style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--gray-500);">
-            Don't have an account? <a href="/signup">Sign Up</a>
-        </p>
+<section class="auth-page"> 
+    <div class="auth-card"> 
+        <h1>Welcome Back</h1> 
+        <p class="subtitle">Log in to access your assessments and reports.</p> 
+        <form method="POST" action="/login"> 
+            <div class="form-group"> 
+                <label for="email">Email Address</label> 
+                <input type="email" id="email" name="email" class="form-control" required placeholder="you@organization.org"> 
+            </div> 
+            <div class="form-group"> 
+                <label for="password">Password</label> 
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Your password"> 
+                <div style="text-align: right; margin-top: 0.5rem; font-size: 0.85rem;"> 
+                    <a href="/forgot-password" style="color: var(--primary); font-weight: 500; text-decoration: none;">Forgot Password?</a> 
+                </div> 
+            </div> 
+            <!-- Honeypot field (hidden from human users, bot trap) --> 
+            <div style="display: none;" aria-hidden="true"> 
+                <input type="text" name="website_verify" tabindex="-1" autocomplete="off" placeholder="Do not fill this out"> 
+            </div> 
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 1.5rem;">Log In</button> 
+        </form> 
+        <p style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--gray-500);"> 
+            Don't have an account? <a href="/signup">Sign Up</a> 
+        </p> 
     </div>
 </section>
 {% endblock %}
