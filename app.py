@@ -14,13 +14,13 @@ app = Flask(__name__)
 # Bulletproof Secret Key Fallback to prevent boot crashes
 app.secret_key = os.environ.get('SECRET_KEY', 'development-safe-fallback-key-12345')
 
-# Secure Flask-Mail configuration (Bypassing network timeouts via hardcoded Google Infrastructure IP)
-app.config['MAIL_SERVER'] = '74.125.142.108'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+# Standard secure Flask-Mail configuration for Google App Passwords
+app.config['MAIL_SERVER'] = '://gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'hello@lmlewisconsulting.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'placeholder-pass')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'hello@lmlewisconsulting.com')
 
 mail = Mail(app)
@@ -401,7 +401,8 @@ def forgot_password():
             token = serializer.dumps(email, salt='password-reset-salt')
             reset_url = url_for('reset_password', token=token, _external=True)
             
-            msg = Message("Password Reset Request — LevelSet", recipients=[email])
+            sender = app.config.get('MAIL_DEFAULT_SENDER', 'hello@lmlewisconsulting.com') 
+            msg = Message("Password Reset Request — LevelSet", sender=sender, recipients=[email])
             msg.body = f"Hello {user['name']},\n\nWe received a request to reset your password for your LevelSet account. This link will expire in 15 minutes.\n\nTo reset your password, please click the following link:\n{reset_url}\n\nBest regards,\nL. M. Lewis Consulting"
             msg.html = f"""<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
                 <h2 style="color: #6C3BBA; margin-bottom: 20px;">LevelSet Password Reset</h2>
@@ -1054,4 +1055,5 @@ def seed_admin():
 seed_admin()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
