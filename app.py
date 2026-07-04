@@ -372,7 +372,7 @@ def login():
             user = User(user_data['id'], user_data['email'], user_data['name'], user_data['organization'], user_data['role'], user_data['plan'])
             login_user(user)
             flash('Welcome back!', 'success')
-            if current_user.role == 'admin':
+            if current_user.role in ['admin', 'moderator']:
                 return redirect(url_for('admin_panel'), 303)
             return redirect(url_for('dashboard'), 303)
             
