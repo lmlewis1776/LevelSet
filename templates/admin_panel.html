@@ -22,14 +22,16 @@
                 <div style="font-size:2rem; font-weight:700; color:var(--primary);">{{ total_users }}</div>
                 <div style="font-size:0.85rem; color:var(--text-muted);">Total Users</div>
             </div>
-            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
-                <div style="font-size:2rem; font-weight:700; color:var(--secondary);">{{ conversion_rate }}%</div>
-                <div style="font-size:0.85rem; color:var(--text-muted);">Subscriber Conversion</div>
-            </div>
-            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
-                <div style="font-size:2rem; font-weight:700; color:var(--success);">${{ total_revenue|round|int }}</div>
-                <div style="font-size:0.85rem; color:var(--text-muted);">Total Revenue</div>
-            </div>
+            {% if current_user.role == 'admin' %}
+                <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                    <div style="font-size:2rem; font-weight:700; color:var(--secondary);">{{ conversion_rate }}%</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Subscriber Conversion</div>
+                </div>
+                <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                    <div style="font-size:2rem; font-weight:700; color:var(--success);">${{ total_revenue|round|int }}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Total Revenue</div>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Assessment Breakdown -->
@@ -47,14 +49,16 @@
                 <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ avg_score }}%</div>
                 <div style="font-size:0.85rem; color:var(--text-muted);">Avg Score</div>
             </div>
-            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
-                <div style="font-size:1.5rem; font-weight:700; color:var(--accent);">{{ subscription_count }}</div>
-                <div style="font-size:0.85rem; color:var(--text-muted);">Subscribers</div>
-            </div>
-            <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
-                <div style="font-size:1.5rem; font-weight:700; color:var(--gray-500);">{{ free_count }}</div>
-                <div style="font-size:0.85rem; color:var(--text-muted);">Free Users</div>
-            </div>
+            {% if current_user.role == 'admin' %}
+                <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:700; color:var(--accent);">{{ subscription_count }}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Subscribers</div>
+                </div>
+                <div class="stat-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:700; color:var(--gray-500);">{{ free_count }}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Free Users</div>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Recent Assessments -->
@@ -133,9 +137,13 @@
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);"><span class="badge" style="background:{% if u.plan == 'subscription' %}#D1FAE5; color:#047857{% else %}#F3F4F6; color:#6B7280{% endif %};">{{ u.plan }}</span></td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ u.created_at }}</td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
-                                    <form method="POST" action="/admin/delete-user/{{ u.id }}" onsubmit="return confirm('Delete user {{ u.name }} ({{ u.email }})? This cannot be undone.');">
-                                        <button type="submit" class="btn btn-danger btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;" {% if u.id == current_user.id %}disabled title="Cannot delete yourself"{% endif %}>Delete</button>
-                                    </form>
+                                    {% if current_user.role == 'admin' %}
+                                        <form method="POST" action="/admin/delete-user/{{ u.id }}" onsubmit="return confirm('Delete user {{ u.name }} ({{ u.email }})? This cannot be undone.');">
+                                            <button type="submit" class="btn btn-danger btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;" {% if u.id == current_user.id %}disabled title="Cannot delete yourself"{% endif %}>Delete</button>
+                                        </form>
+                                    {% else %}
+                                        <span style="color:var(--text-muted); font-size:0.75rem;">—</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
