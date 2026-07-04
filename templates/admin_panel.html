@@ -70,6 +70,7 @@
                                 <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Type</th>
                                 <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Score</th>
                                 <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Date</th>
+                                <th style="padding:0.6rem; text-align:left; border-bottom: 2px solid var(--border);">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -85,9 +86,14 @@
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
                                     {% if a.max_score > 0 %}
                                         <strong>{{ (a.score / a.max_score * 100)|round|int }}%</strong>
-                                    {% else %}N/A{% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
                                 </td>
                                 <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space:nowrap;">{{ a.created_at }}</td>
+                                <td style="padding:0.5rem 0.6rem; border-bottom: 1px solid var(--border);">
+                                    <a href="/report/{{ a.id }}" class="btn btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem; background:var(--primary); color:white; border-radius:4px; text-decoration:none;">View</a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
