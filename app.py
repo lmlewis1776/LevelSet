@@ -27,7 +27,7 @@ mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 # Database setup
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'levelsethq.db')
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
