@@ -748,19 +748,37 @@ def tech_assessment():
 @login_required
 def report_result(report_id):
     conn = get_db()
-    report = conn.execute(
-        'SELECT * FROM reports WHERE id = ? AND user_id = ?',
-        (report_id, current_user.id)
-    ).fetchone()
+    
+    # Super-Admin Route Override: admins bypass user_id filters to safely view 
+    # any generated client report for onboarding triage and discovery preparation.
+    if current_user.role == 'admin':
+        report = conn.execute(
+            'SELECT * FROM reports WHERE id = ?', 
+            (report_id,)
+        ).fetchone()
+    else:
+        report = conn.execute(
+            'SELECT * FROM reports WHERE id = ? AND user_id = ?', 
+            (report_id, current_user.id)
+        ).fetchone()
+        
     if not report:
         conn.close()
         flash('Report not found', 'error')
         return redirect(url_for('dashboard'), 303)
-
+        
     # Check if this specific report was paid for or if the user is a subscriber
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
     conn.close()
     
+    # Super-Admin Route Override: bypass paywalls so the consultant always sees 
+    # all charts, scores, and the full premium consultative prose evaluation.
+    if current_user.role == 'admin':
+        is_paid = True
+        is_report_unlocked = True
+    else:
+        is_report_unlocked = is_paid
+        
     report_data = json.loads(report['data'])
 
     # Premium Consultative Prose Analysis (💎 Premium Analysis)
@@ -781,7 +799,7 @@ def report_result(report_id):
     resources = get_tailored_resources(org_type, report['report_type'], report['score'], report['max_score'])
     
     # We pass 'is_paid' to control only the text visibility. The score charts and links remain 100% visible on their first free run!
-    return render_template('report_result.html', report=report, data=report_data, is_paid=True, is_report_unlocked=is_paid, resources=resources, org_type=org_type, premium_analysis=premium_analysis)
+    return render_template('report_result.html', report=report, data=report_data, is_paid=True, is_report_unlocked=is_report_unlocked, resources=resources, org_type=org_type, premium_analysis=premium_analysis)
    
 @app.route('/pay/<int:report_id>', methods=['POST'])
 @login_required
