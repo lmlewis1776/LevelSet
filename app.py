@@ -15,7 +15,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'development-safe-fallback-key-12345')
 
 # Secure Flask-Mail configuration with production fail-safes
-app.config['MAIL_SERVER'] = '://gmail.com'
+app.config['MAIL_SERVER'] = '74.125.142.108'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
