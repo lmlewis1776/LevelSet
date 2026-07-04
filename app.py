@@ -943,9 +943,21 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def role_required(allowed_roles):
+    """Decorator to require one of the allowed roles for secure route shielding."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or current_user.role not in allowed_roles:
+                flash('You do not have permission to access this page.', 'error')
+                return redirect(url_for('login'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 @app.route('/admin')
 @login_required
-@admin_required
+@role_required(['admin', 'moderator'])
 def admin_panel():
     conn = get_db()
     
@@ -999,7 +1011,7 @@ def admin_panel():
 
 @app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
 @login_required
-@admin_required
+@role_required(['admin'])
 def admin_delete_user(user_id):
     conn = get_db()
     user = conn.execute('SELECT id, email, name FROM users WHERE id = ?', (user_id,)).fetchone()
