@@ -317,11 +317,24 @@ def signup():
             session['captcha_answer'] = a + b
             session['captcha_question'] = f"What is {a} + {b}?"
             return render_template('signup.html')
-        
+
         if not name or not email or not password:
             flash('All fields are required', 'error')
             return render_template('signup.html')
-        
+
+        # Corporate Password Complexity Validation Rules
+        if len(password) < 8:
+            flash('Password is too short. It must be at least 8 characters long.', 'error')
+            return render_template('signup.html')
+            
+        if not any(char.isupper() for char in password):
+            flash('Password must contain at least one uppercase letter (A-Z).', 'error')
+            return render_template('signup.html')
+            
+        if not any(char.isdigit() for char in password):
+            flash('Password must contain at least one number (0-9).', 'error')
+            return render_template('signup.html')
+
         conn = get_db()
         existing = conn.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone()
         if existing:
