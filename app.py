@@ -756,13 +756,21 @@ def report_result(report_id):
     # Staff Override: admins and moderators bypass user_id filters to safely view 
     # any generated client report for onboarding triage and discovery preparation.
     if current_user.role in ['admin', 'moderator']:
+        # Advanced Database Relation Join: Fetch the report data AND pull the 
+        # original client's registered name/company profile directly from the users table.
         report = conn.execute(
-            'SELECT * FROM reports WHERE id = ?', 
+            '''SELECT r.*, u.name as client_name, u.organization as client_org 
+               FROM reports r 
+               JOIN users u ON r.user_id = u.id 
+               WHERE r.id = ?''', 
             (report_id,)
         ).fetchone()
     else:
         report = conn.execute(
-            'SELECT * FROM reports WHERE id = ? AND user_id = ?', 
+            '''SELECT r.*, u.name as client_name, u.organization as client_org 
+               FROM reports r 
+               JOIN users u ON r.user_id = u.id 
+               WHERE r.id = ? AND r.user_id = ?''', 
             (report_id, current_user.id)
         ).fetchone()
         
