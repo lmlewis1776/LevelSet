@@ -14,8 +14,8 @@
         </span>
         <h1>{{ report.title }}</h1>
         <p style="color: var(--gray-600); font-size: 1.05rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
-            Evaluation for <strong>{{ report.user_name if report.user_name else 'Registered Client' }}</strong> 
-            {% if report.org_type %}({{ report.org_type|capitalize }}){% endif %}
+            Evaluation for <strong>{{ current_user.name }}</strong> 
+            {% if current_user.organization %}({{ current_user.organization }}){% endif %}
         </p>
         <p style="color: var(--gray-400); font-size: 0.85rem; margin: 0;">Report Generated: {{ report.created_at }}</p>
     </div>
