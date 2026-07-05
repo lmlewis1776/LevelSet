@@ -753,9 +753,9 @@ def tech_assessment():
 def report_result(report_id):
     conn = get_db()
     
-    # Super-Admin Route Override: admins bypass user_id filters to safely view 
+    # Staff Override: admins and moderators bypass user_id filters to safely view 
     # any generated client report for onboarding triage and discovery preparation.
-    if current_user.role == 'admin':
+    if current_user.role in ['admin', 'moderator']:
         report = conn.execute(
             'SELECT * FROM reports WHERE id = ?', 
             (report_id,)
@@ -775,9 +775,9 @@ def report_result(report_id):
     is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
     conn.close()
     
-    # Super-Admin Route Override: bypass paywalls so the consultant always sees 
+    # Staff Override: bypass paywalls so both the consultant and assistants see 
     # all charts, scores, and the full premium consultative prose evaluation.
-    if current_user.role == 'admin':
+    if current_user.role in ['admin', 'moderator']:
         is_paid = True
         is_report_unlocked = True
     else:
