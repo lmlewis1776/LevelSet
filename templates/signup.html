@@ -35,6 +35,11 @@
                 <div class="form-hint">Simple math to verify you're human</div>
             </div>
             
+            <!-- Honeypot field (hidden from human users, bot trap) --> 
+            <div style="display: none;" aria-hidden="true"> 
+                <input type="text" name="website_verify" tabindex="-1" autocomplete="off" placeholder="Do not fill this out"> 
+            </div> 
+            
             <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
         </form>
         

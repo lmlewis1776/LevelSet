@@ -302,6 +302,10 @@ def contact():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        # Honeypot silent bot check
+        if request.form.get('website_verify'):
+            return render_template('signup.html')
+
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
