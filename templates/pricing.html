@@ -135,5 +135,58 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- Official PayPal Smart Buttons SDK Engine -->
 <script src="https://www.paypal.com/sdk/js?client-id=AauqNq8xPGUgJfp50zkRQSw5wBAPTyybLmTlPkDejgQFEAbm6eVvPi-Y8eGn61aQv-NrZuLo4Ty5w1-W&currency=USD" data-sdk-integration-source="button-factory"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. RENDER THE PAY-PER-REPORT SINGLE TRANSACTION BUTTON
+    if (document.querySelector('#paypal-button-container[data-paypal-button="buy_report"]')) {
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: "LevelSet Premium Consultative Analysis Report (One-Time Access)",
+                        amount: {
+                            currency_code: "USD",
+                            value: "49.00"
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    // Instantly forward them to our sandbox confirmation handler to unlock their file seamlessly
+                    var reportId = document.querySelector('[data-paypal-button="buy_report"]').getAttribute('data-report-id');
+                    window.location.href = "/sandbox/simulate-ppr/" + reportId;
+                });
+            }
+        }).render('#paypal-button-container[data-paypal-button="buy_report"]');
+    }
+
+    // 2. RENDER THE RECURRING MONTHLY SUBSCRIPTION BUTTON
+    if (document.querySelector('#paypal-button-container[data-paypal-button="upgrade"]')) {
+        paypal.Buttons({
+            style: {
+                shape: 'rect',
+                color: 'gold',
+                layout: 'vertical',
+                label: 'subscribe'
+            },
+            createSubscription: function(data, actions) {
+                // Tells PayPal's network to activate an official rolling recurring subscription contract
+                return actions.subscription.create({
+                    /* Note for Launch: Replace this placeholder string with your live 
+                       PayPal Developer Dashboard Plan ID once your merchant keys go live. */
+                    'plan_id': 'P-5000_SAMPLE_PLAN_ID_TOKENS' 
+                });
+            },
+            onApprove: function(data, actions) {
+                // Instantly forward them to our sandbox membership router to open up their global dashboard access
+                window.location.href = "/sandbox/simulate-subscription";
+            }
+        }).render('#paypal-button-container[data-paypal-button="upgrade"]');
+    }
+});
+</script>
 {% endblock %}
