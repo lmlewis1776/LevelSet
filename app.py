@@ -402,6 +402,28 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/sandbox/simulate-ppr/<int:report_id>')
+@login_required
+def simulate_ppr(report_id):
+    """Bypasses real payment processing to instantly unlock a single report for testing."""
+    conn = get_db()
+    conn.execute('UPDATE reports SET paid = 1 WHERE id = ? AND user_id = ?', (report_id, current_user.id))
+    conn.commit()
+    conn.close()
+    flash('Sandbox Simulation: Report successfully unlocked via Pay-Per-Report baseline!', 'success')
+    return redirect(url_for('report_result', report_id=report_id), 303)
+
+@app.route('/sandbox/simulate-subscription')
+@login_required
+def simulate_subscription():
+    """Bypasses real payment processing to instantly grant a rolling monthly subscription tier."""
+    conn = get_db()
+    conn.execute("UPDATE users SET plan = 'subscription' WHERE id = ?", (current_user.id,))
+    conn.commit()
+    conn.close()
+    flash('Sandbox Simulation: Monthly recurring subscription successfully activated!', 'success')
+    return redirect(url_for('dashboard'), 303)
+
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
