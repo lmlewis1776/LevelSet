@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}Pricing — LevelSet{% endblock %}
 
 {% block content %}
@@ -56,13 +57,15 @@
                             <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
                             <a href="/sandbox/simulate-ppr/{{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700);">[Sandbox] Unlock Report #{{ request.args.get('report_id') }}</a>
                         {% else %}
-                            <!-- Real Public Transaction Layer: Loads live PayPal gateway button processing strings -->
-                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">✓ Unlocking Report #{{ request.args.get('report_id') }}</p>
-                            <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ request.args.get('report_id') }}" data-amount="49.00" style="margin-top: 0.5rem;"></div>
+                            <!-- Real Public Transaction Layer -->
+                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
+                                💳 Secure One-Time Report Unlock ($49)
+                            </p>
+                            <div id="paypal-single-report-container" data-report-id="{{ request.args.get('report_id') }}" style="margin-top: 0.5rem;"></div>
                         {% endif %}
-                 {% else %}
-                     <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
-                 {% endif %}
+                    {% else %}
+                        <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
+                    {% endif %}
                 {% else %}
                     <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem;">Get Started</a>
                 {% endif %}
@@ -91,8 +94,11 @@
                             <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
                             <a href="/sandbox/simulate-subscription" class="btn btn-secondary" style="width:100%; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700); color: white;">[Sandbox] Upgrade to Subscription</a>
                         {% else %}
-                            <!-- Real Public Transaction Layer: Loads live recurring monthly PayPal button arrays -->
-                            <div id="paypal-button-container" data-paypal-button="upgrade" data-amount="49.00" style="margin-top: 1rem;"></div>
+                            <!-- Real Public Transaction Layer -->
+                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
+                                🔄 Secure Rolling Monthly Subscription ($49/mo)
+                            </p>
+                            <div id="paypal-monthly-subscription-container" style="margin-top: 1rem;"></div>
                         {% endif %}
                     {% endif %}
                 {% else %}
@@ -104,27 +110,22 @@
         <!-- FAQ -->
         <div style="max-width: 700px; margin: 0 auto;">
             <h2 style="text-align:center; margin-bottom: 2rem;">Frequently Asked Questions</h2>
-            
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size:1rem; margin-bottom:0.5rem;">What do I get with the free plan?</h4>
                 <p style="color:var(--gray-600); font-size:0.95rem;">You get one free self-assessment report of your choice. After that, you can purchase individual reports for $49 each or subscribe for unlimited access.</p>
             </div>
-            
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size:1rem; margin-bottom:0.5rem;">Can I switch plans later?</h4>
                 <p style="color:var(--gray-600); font-size:0.95rem;">Absolutely! You can upgrade from Free to Subscription at any time, or cancel your subscription and move back to Free.</p>
             </div>
-            
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size:1rem; margin-bottom:0.5rem;">How are the assessments scored?</h4>
                 <p style="color:var(--gray-600); font-size:0.95rem;">Each assessment uses a weighted scoring system across multiple dimensions. Your results include an overall score, dimension-by-dimension breakdown, and actionable recommendations.</p>
             </div>
-            
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size:1rem; margin-bottom:0.5rem;">Who is behind LevelSet?</h4>
                 <p style="color:var(--gray-600); font-size:0.95rem;">LevelSet is powered by L. M. Lewis Consulting, bringing 15+ years of organizational health and corporate resilience consulting expertise into an affordable SaaS platform.</p>
             </div>
-            
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size:1rem; margin-bottom:0.5rem;">Is my data secure?</h4>
                 <p style="color:var(--gray-600); font-size:0.95rem;">Yes. All assessment data is encrypted and stored securely. We never share your organization's data with third parties.</p>
@@ -136,12 +137,13 @@
 
 {% block extra_scripts %}
 <!-- Official PayPal Smart Buttons SDK Engine -->
-<script src="https://www.paypal.com/sdk/js?client-id=AauqNq8xPGUgJfp50zkRQSw5wBAPTyybLmTlPkDejgQFEAbm6eVvPi-Y8eGn61aQv-NrZuLo4Ty5w1-W&currency=USD" data-sdk-integration-source="button-factory"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=client-id=AauqNq8xPGUgJfp50zkRQSw5wBAPTyybLmTlPkDejgQFEAbm6eVvPi-Y8eGn61aQv-NrZuLo4Ty5w1-W&currency=USD&currency=USD" data-sdk-integration-source="button-factory"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. RENDER THE PAY-PER-REPORT SINGLE TRANSACTION BUTTON
-    if (document.querySelector('#paypal-button-container[data-paypal-button="buy_report"]')) {
+    // 1. ISOLATED RENDER ROUTE FOR THE SINGLE REPORT CARD KEY
+    var singleContainer = document.getElementById('paypal-single-report-container');
+    if (singleContainer) {
         paypal.Buttons({
             createOrder: function(data, actions) {
                 return actions.order.create({
@@ -156,16 +158,16 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(details) {
-                    // Instantly forward them to our sandbox confirmation handler to unlock their file seamlessly
-                    var reportId = document.querySelector('[data-paypal-button="buy_report"]').getAttribute('data-report-id');
+                    var reportId = singleContainer.getAttribute('data-report-id');
                     window.location.href = "/sandbox/simulate-ppr/" + reportId;
                 });
             }
-        }).render('#paypal-button-container[data-paypal-button="buy_report"]');
+        }).render('#paypal-single-report-container');
     }
 
-    // 2. RENDER THE RECURRING MONTHLY SUBSCRIPTION BUTTON
-    if (document.querySelector('#paypal-button-container[data-paypal-button="upgrade"]')) {
+    // 2. ISOLATED RENDER ROUTE FOR THE MONTHLY SUBSCRIPTION TIER
+    var subContainer = document.getElementById('paypal-monthly-subscription-container');
+    if (subContainer) {
         paypal.Buttons({
             style: {
                 shape: 'rect',
@@ -174,18 +176,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 label: 'subscribe'
             },
             createSubscription: function(data, actions) {
-                // Tells PayPal's network to activate an official rolling recurring subscription contract
                 return actions.subscription.create({
-                    /* Note for Launch: Replace this placeholder string with your live 
-                       PayPal Developer Dashboard Plan ID once your merchant keys go live. */
+                    /* Sandbox Simulation Fallback: In testing mode with a default sandbox ID, 
+                       this simulates the contract. Replace with your true Plan ID upon production launching. */
                     'plan_id': 'P-5000_SAMPLE_PLAN_ID_TOKENS' 
                 });
             },
             onApprove: function(data, actions) {
-                // Instantly forward them to our sandbox membership router to open up their global dashboard access
                 window.location.href = "/sandbox/simulate-subscription";
             }
-        }).render('#paypal-button-container[data-paypal-button="upgrade"]');
+        }).render('#paypal-monthly-subscription-container');
     }
 });
 </script>
