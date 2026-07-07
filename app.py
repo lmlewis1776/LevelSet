@@ -1087,6 +1087,18 @@ def admin_delete_user(user_id):
     flash(f'User {user["name"]} ({user["email"]}) deleted successfully.', 'success')
     return redirect(url_for('admin_panel'))
 
+@app.route('/admin/delete-report/<int:report_id>', methods=['POST'])
+@login_required
+@role_required(['admin'])
+def delete_report(report_id):
+    """Super-Admin Command: Permanently deletes a report row to reset a client's free evaluation slot."""
+    conn = get_db()
+    conn.execute('DELETE FROM reports WHERE id = ?', (report_id,))
+    conn.commit()
+    conn.close()
+    flash('Admin Action Success: Client evaluation has been completely deleted and reset to square one!', 'success')
+    return redirect(url_for('admin_panel'), 303)
+
 # --- Seed Admin User ---
 def seed_admin():
     """Create or reset the admin account using ADMIN_PASSWORD from environment."""
