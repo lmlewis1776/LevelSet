@@ -54,14 +54,34 @@
                         <p style="color: var(--success); font-weight:600; font-size: 0.95rem; margin-top: 1rem;">✓ Unlocked with Subscription</p>
                     {% elif request.args.get('report_id') %}
                         {% if current_user.role in ['admin', 'moderator'] %}
-                            <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
                             <a href="/sandbox/simulate-ppr/{{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700);">[Sandbox] Unlock Report #{{ request.args.get('report_id') }}</a>
                         {% else %}
-                            <!-- Real Public Transaction Layer -->
-                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
-                                💳 Secure One-Time Report Unlock ($49)
-                            </p>
-                            <div id="paypal-single-report-container" data-report-id="{{ request.args.get('report_id') }}" style="margin-top: 0.5rem;"></div>
+                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">💳 Secure One-Time Report Unlock ($49)</p>
+                            
+                            <!-- Standalone Container with Built-in Isolated SDK Loader -->
+                            <div id="paypal-single-report-container"></div>
+                            <script src="https://paypal.com" data-namespace="paypal_single"></script>
+                            <script>
+                                setTimeout(function() {
+                                    if (window.paypal_single) {
+                                        paypal_single.Buttons({
+                                            createOrder: function(data, actions) {
+                                                return actions.order.create({
+                                                    purchase_units: [{
+                                                        description: "LevelSet Premium Consultative Analysis Report (One-Time Access)",
+                                                        amount: { currency_code: "USD", value: "49.00" }
+                                                    }]
+                                                });
+                                            },
+                                            onApprove: function(data, actions) {
+                                                return actions.order.capture().then(function(details) {
+                                                    window.location.href = "/sandbox/simulate-ppr/{{ request.args.get('report_id') }}";
+                                                });
+                                            }
+                                        }).render('#paypal-single-report-container');
+                                    }
+                                }, 150);
+                            </script>
                         {% endif %}
                     {% else %}
                         <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
@@ -91,14 +111,28 @@
                         </div>
                     {% else %}
                         {% if current_user.role in ['admin', 'moderator'] %}
-                            <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
                             <a href="/sandbox/simulate-subscription" class="btn btn-secondary" style="width:100%; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700); color: white;">[Sandbox] Upgrade to Subscription</a>
                         {% else %}
-                            <!-- Real Public Transaction Layer -->
-                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">
-                                🔄 Secure Rolling Monthly Subscription ($49/mo)
-                            </p>
-                            <div id="paypal-monthly-subscription-container" style="margin-top: 1rem;"></div>
+                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">🔄 Secure Rolling Monthly Subscription ($49/mo)</p>
+                            
+                            <!-- Standalone Container with Built-in Isolated Subscription SDK Loader -->
+                            <div id="paypal-monthly-subscription-container"></div>
+                            <script src="https://paypal.com&vault=true&intent=subscription" data-namespace="paypal_sub"></script>
+                            <script>
+                                setTimeout(function() {
+                                    if (window.paypal_sub) {
+                                        paypal_sub.Buttons({
+                                            style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' },
+                                            createSubscription: function(data, actions) {
+                                                return actions.subscription.create({ 'plan_id': 'P-5000_SAMPLE_PLAN_ID_TOKENS' });
+                                            },
+                                            onApprove: function(data, actions) {
+                                                window.location.href = "/sandbox/simulate-subscription";
+                                            }
+                                        }).render('#paypal-monthly-subscription-container');
+                                    }
+                                }, 150);
+                            </script>
                         {% endif %}
                     {% endif %}
                 {% else %}
@@ -106,7 +140,6 @@
                 {% endif %}
             </div>
         </div>
-
         <!-- FAQ -->
         <div style="max-width: 700px; margin: 0 auto;">
             <h2 style="text-align:center; margin-bottom: 2rem;">Frequently Asked Questions</h2>
@@ -133,63 +166,4 @@
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_scripts %}
-<!-- Official PayPal Smart Buttons SDK Engine -->
-<script src="https://www.paypal.com/sdk/js?client-id=client-id=AauqNq8xPGUgJfp50zkRQSw5wBAPTyybLmTlPkDejgQFEAbm6eVvPi-Y8eGn61aQv-NrZuLo4Ty5w1-W&currency=USD&currency=USD" data-sdk-integration-source="button-factory"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Mini delay to guarantee Render has completely painted the HTML elements into the DOM tree
-    setTimeout(function() {
-        // 1. ISOLATED RENDER ROUTE FOR THE SINGLE REPORT CARD KEY
-        var singleContainer = document.getElementById('paypal-single-report-container');
-        if (singleContainer) {
-            paypal.Buttons({
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            description: "LevelSet Premium Consultative Analysis Report (One-Time Access)",
-                            amount: {
-                                currency_code: "USD",
-                                value: "49.00"
-                            }
-                        }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        var reportId = singleContainer.getAttribute('data-report-id');
-                        window.location.href = "/sandbox/simulate-ppr/" + reportId;
-                    });
-                }
-            }).render('#paypal-single-report-container');
-        }
-
-        // 2. ISOLATED RENDER ROUTE FOR THE MONTHLY SUBSCRIPTION TIER
-        var subContainer = document.getElementById('paypal-monthly-subscription-container');
-        if (subContainer) {
-            paypal.Buttons({
-                style: {
-                    shape: 'rect',
-                    color: 'gold',
-                    layout: 'vertical',
-                    label: 'subscribe'
-                },
-                createSubscription: function(data, actions) {
-                    return actions.subscription.create({
-                        /* Sandbox Simulation Fallback: In testing mode with a default sandbox ID, 
-                           this simulates the contract. Replace with your true Plan ID upon production launching. */
-                        'plan_id': 'P-5000_SAMPLE_PLAN_ID_TOKENS' 
-                    });
-                },
-                onApprove: function(data, actions) {
-                    window.location.href = "/sandbox/simulate-subscription";
-                }
-            }).render('#paypal-monthly-subscription-container');
-        }
-    }, 100); // 100 millisecond safety buffer
-});
-</script>
 {% endblock %}
