@@ -52,11 +52,17 @@
                     {% if current_user.plan == 'subscription' %}
                         <p style="color: var(--success); font-weight:600; font-size: 0.95rem; margin-top: 1rem;">✓ Unlocked with Subscription</p>
                     {% elif request.args.get('report_id') %}
-                        <!-- Active dynamic shortcut to simulate an individual report unlock via our testing route -->
-                        <a href="/sandbox/simulate-ppr/{{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600;">Unlock Report #{{ request.args.get('report_id') }}</a>
-                    {% else %}
-                        <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
-                    {% endif %}
+                        {% if current_user.role in ['admin', 'moderator'] %}
+                            <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
+                            <a href="/sandbox/simulate-ppr/{{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700);">[Sandbox] Unlock Report #{{ request.args.get('report_id') }}</a>
+                        {% else %}
+                            <!-- Real Public Transaction Layer: Loads live PayPal gateway button processing strings -->
+                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">✓ Unlocking Report #{{ request.args.get('report_id') }}</p>
+                            <div id="paypal-button-container" data-paypal-button="buy_report" data-report-id="{{ request.args.get('report_id') }}" data-amount="49.00" style="margin-top: 0.5rem;"></div>
+                        {% endif %}
+                 {% else %}
+                     <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
+                 {% endif %}
                 {% else %}
                     <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem;">Get Started</a>
                 {% endif %}
@@ -81,8 +87,13 @@
                             <p style="color: var(--primary); font-weight:700; margin: 0; font-size: 0.9rem;">✓ Active Rolling Subscription</p>
                         </div>
                     {% else %}
-                        <!-- Active dynamic shortcut to trigger our simulated recurring client tier onboarding -->
-                        <a href="/sandbox/simulate-subscription" class="btn btn-secondary" style="width:100%; margin-top: 1rem; font-weight: 600;">Upgrade to Subscription</a>
+                        {% if current_user.role in ['admin', 'moderator'] %}
+                            <!-- Free Sandbox Simulation Trigger for Staff Testing Only -->
+                            <a href="/sandbox/simulate-subscription" class="btn btn-secondary" style="width:100%; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700); color: white;">[Sandbox] Upgrade to Subscription</a>
+                        {% else %}
+                            <!-- Real Public Transaction Layer: Loads live recurring monthly PayPal button arrays -->
+                            <div id="paypal-button-container" data-paypal-button="upgrade" data-amount="49.00" style="margin-top: 1rem;"></div>
+                        {% endif %}
                     {% endif %}
                 {% else %}
                     <a href="/signup" class="btn btn-secondary" style="width:100%; margin-top: 1rem;">Subscribe Now</a>
