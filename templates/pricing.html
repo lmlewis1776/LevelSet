@@ -53,17 +53,13 @@
                     {% if current_user.plan == 'subscription' %}
                         <p style="color: var(--success); font-weight:600; font-size: 0.95rem; margin-top: 1rem;">✓ Unlocked with Subscription</p>
                     {% elif request.args.get('report_id') %}
-                        {% if current_user.role in ['admin', 'moderator'] %}
-                            <a href="/sandbox/simulate-ppr/{{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700)">[Sandbox] Unlock Report #{{ request.args.get('report_id') }}</a>
-                        {% else %}
-                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">💳 Secure One-Time Report Unlock ($49)</p>
-                            <div id="paypal-single-report-container" data-report-id="{{ request.args.get('report_id') }}" style="margin-top: 0.5rem; min-height: 150px;"></div>
-                        {% endif %}
+                        <!-- Clean, Ultra-Reliable Stripe Checkout Core Anchor Hook -->
+                        <a href="/create-checkout-session/ppr?report_id={{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; text-decoration: none; padding: 0.75rem;">💳 Unlock Report #{{ request.args.get('report_id') }} ($49)</a>
                     {% else %}
-                        <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem;">Select a Report to Unlock</a>
+                        <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; text-decoration: none; padding: 0.75rem;">Select a Report to Unlock</a>
                     {% endif %}
                 {% else %}
-                    <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem;">Get Started</a>
+                    <a href="/signup" class="btn btn-primary" style="width:100%; margin-top: 1rem; text-decoration: none; padding: 0.75rem;">Get Started</a>
                 {% endif %}
             </div>
 
@@ -83,18 +79,14 @@
                 {% if current_user.is_authenticated %}
                     {% if current_user.plan == 'subscription' %}
                         <div style="background: rgba(108, 59, 186, 0.1); border: 1px solid var(--primary); padding: 0.5rem; border-radius: var(--radius); margin-top: 1rem;">
-                            <p style="color: var(--primary); font-weight:700; margin: 0; font-size: 0.9rem;">✓ Active Rolling Subscription</p>
+                            <p style="color: var(--primary); font-weight:700; margin: 0; font-size: 0.9rem; text-align: center;">✓ Active Rolling Subscription</p>
                         </div>
                     {% else %}
-                        {% if current_user.role in ['admin', 'moderator'] %}
-                            <a href="/sandbox/simulate-subscription" class="btn btn-secondary" style="width:100%; margin-top: 1rem; font-weight: 600; background: var(--gray-700); border-color: var(--gray-700); color: white;">[Sandbox] Upgrade to Subscription</a>
-                        {% else %}
-                            <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-top: 1rem; margin-bottom: 0.5rem; text-align:center;">🔄 Secure Rolling Monthly Subscription ($49/mo)</p>
-                            <div id="paypal-monthly-subscription-container" style="margin-top: 0.5rem; min-height: 150px;"></div>
-                        {% endif %}
+                        <!-- Clean, Ultra-Reliable Stripe Subscription Anchor Hook -->
+                        <a href="/create-checkout-session/subscription" class="btn btn-secondary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; text-decoration: none; padding: 0.75rem;">🔄 Subscribe Monthly ($49/mo)</a>
                     {% endif %}
                 {% else %}
-                    <a href="/signup" class="btn btn-secondary" style="width:100%; margin-top: 1rem;">Subscribe Now</a>
+                    <a href="/signup" class="btn btn-secondary" style="width:100%; margin-top: 1rem; text-decoration: none; padding: 0.75rem;">Subscribe Now</a>
                 {% endif %}
             </div>
         </div>
@@ -125,61 +117,4 @@
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_scripts %}
-<!-- Official PayPal Smart Buttons SDK Engine -->
-<script src="https://www.paypal.com/sdk/js?client-id=[long string of characters]&currency=USD" data-sdk-integration-source="button-factory"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. RENDER SINGLE TRANSACTION BUTTON
-    var singleContainer = document.getElementById('paypal-single-report-container');
-    if (singleContainer) {
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        description: "LevelSet Premium Consultative Analysis Report (One-Time Access)",
-                        amount: { currency_code: "USD", value: "49.00" }
-                    }]
-                });
-            },
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    var reportId = singleContainer.getAttribute('data-report-id');
-                    window.location.href = "/sandbox/simulate-ppr/" + reportId;
-                });
-            }
-        }).render('#paypal-single-report-container');
-    }
-
-    // 2. RENDER RECURRING MONTHLY SUBSCRIPTION BUTTON
-    var subContainer = document.getElementById('paypal-monthly-subscription-container');
-    if (subContainer) {
-        paypal.Buttons({
-            style: {
-                shape: 'rect',
-                color: 'gold',
-                layout: 'vertical',
-                label: 'subscribe'
-            },
-            createOrder: function(data, actions) {
-                // Standalone Order Creation for Subscription Billing Simulation
-                return actions.order.create({
-                    purchase_units: [{
-                        description: "LevelSet Monthly Recurring Subscription Tier Plan Activation",
-                        amount: { currency_code: "USD", value: "49.00" }
-                    }]
-                });
-            },
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    window.location.href = "/sandbox/simulate-subscription";
-                });
-            }
-        }).render('#paypal-monthly-subscription-container');
-    }
-});
-</script>
 {% endblock %}
