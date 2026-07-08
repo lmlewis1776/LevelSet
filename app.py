@@ -446,6 +446,7 @@ def create_checkout_session(plan_type):
         # Build the official Stripe security session packet
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
+            allow_promotion_codes=True,
             line_items=[price_item],
             mode=mode,
             success_url=success_endpoint,
