@@ -54,7 +54,9 @@
                         <p style="color: var(--success); font-weight:600; font-size: 0.95rem; margin-top: 1rem;">✓ Unlocked with Subscription</p>
                     {% elif request.args.get('report_id') %}
                         <!-- Clean, Ultra-Reliable Stripe Checkout Core Anchor Hook -->
-                        <a href="/create-checkout-session/ppr?report_id={{ request.args.get('report_id') }}" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; text-decoration: none; padding: 0.75rem;">💳 Unlock Report #{{ request.args.get('report_id') }} ($49)</a>
+                        <a href="/create-checkout-session/ppr?report_id={{ request.args.get('report_id') }}" style="display: block; width: 100%; margin-top: 1.5rem; padding: 0.85rem 1rem; background: #bf8b4b; color: white; font-weight: 700; text-align: center; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: none; font-size: 0.95rem; transition: background 0.2s;">
+                            💳 Secure One-Time Report Unlock ($49)
+                        </a>
                     {% else %}
                         <a href="/dashboard" class="btn btn-primary" style="width:100%; display: block; text-align: center; margin-top: 1rem; text-decoration: none; padding: 0.75rem;">Select a Report to Unlock</a>
                     {% endif %}
@@ -83,7 +85,9 @@
                         </div>
                     {% else %}
                         <!-- Clean, Ultra-Reliable Stripe Subscription Anchor Hook -->
-                        <a href="/create-checkout-session/subscription" class="btn btn-secondary" style="width:100%; display: block; text-align: center; margin-top: 1rem; font-weight: 600; text-decoration: none; padding: 0.75rem;">🔄 Subscribe Monthly ($49/mo)</a>
+                        <a href="/create-checkout-session/subscription" style="display: block; width: 100%; margin-top: 1.5rem; padding: 0.85rem 1rem; background: #0d0d0d; color: white; font-weight: 700; text-align: center; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: none; font-size: 0.95rem; transition: background 0.2s;">
+                            🔄 Secure Rolling Monthly Subscription ($49/mo)
+                        </a>
                     {% endif %}
                 {% else %}
                     <a href="/signup" class="btn btn-secondary" style="width:100%; margin-top: 1rem; text-decoration: none; padding: 0.75rem;">Subscribe Now</a>
