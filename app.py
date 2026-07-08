@@ -1,5 +1,6 @@
 import os
 import json
+import stripe
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -402,27 +403,79 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/sandbox/simulate-ppr/<int:report_id>')
-@login_required
-def simulate_ppr(report_id):
-    """Bypasses real payment processing to instantly unlock a single report for testing."""
-    conn = get_db()
-    conn.execute('UPDATE reports SET paid = 1 WHERE id = ? AND user_id = ?', (report_id, current_user.id))
-    conn.commit()
-    conn.close()
-    flash('Sandbox Simulation: Report successfully unlocked via Pay-Per-Report baseline!', 'success')
-    return redirect(url_for('report_result', report_id=report_id), 303)
+# ==========================================
+# 💳 STRIPE ENTERPRISE BILLING PIPELINE
+# ==========================================
 
-@app.route('/sandbox/simulate-subscription')
+# Configure your secure connection keys using the tokens saved on your desktop
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "fallback_key_here")
+
+@app.route('/create-checkout-session/<string:plan_type>')
 @login_required
-def simulate_subscription():
-    """Bypasses real payment processing to instantly grant a rolling monthly subscription tier."""
+def create_checkout_session(plan_type):
+    """Generates a secure Stripe Checkout Session and redirects the client to Stripe's canvas."""
+    try:
+        # Determine the price details and pass matching payment intents
+        if plan_type == 'subscription':
+            # Recurring Monthly Membership Mode
+            price_item = {
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': 'LevelSet Monthly Subscription — Unlimited Access'},
+                    'unit_amount': 4900,  # $49.00 in cents
+                    'recurring': {'interval': 'month'},
+                },
+                'quantity': 1,
+            }
+            mode = 'subscription'
+            success_endpoint = url_for('stripe_success', plan_type='subscription', _external=True)
+        else:
+            # Single Pay-Per-Report Unlock Mode
+            report_id = request.args.get('report_id', '0')
+            price_item = {
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': f'LevelSet Premium Report Unlock (ID #{report_id})'},
+                    'unit_amount': 4900,  # $49.00 in cents
+                },
+                'quantity': 1,
+            }
+            mode = 'payment'
+            success_endpoint = url_for('stripe_success', plan_type=f'ppr_{report_id}', _external=True)
+
+        # Build the official Stripe security session packet
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[price_item],
+            mode=mode,
+            success_url=success_endpoint,
+            cancel_url=url_for('pricing', _external=True),
+        )
+        return redirect(checkout_session.url, code=303)
+
+    except Exception as e:
+        flash('Payment system on temporary standby. Please contact executive support.', 'error')
+        return redirect(url_for('pricing'))
+
+@app.route('/stripe-success/<string:plan_type>')
+@login_required
+def stripe_success(plan_type):
+    """Processes verified transaction completion data tokens securely to unlock access privileges."""
     conn = get_db()
-    conn.execute("UPDATE users SET plan = 'subscription' WHERE id = ?", (current_user.id,))
+    if plan_type == 'subscription':
+        # Instantly elevate their profile row to full rolling monthly member tiers
+        conn.execute("UPDATE users SET plan = 'subscription' WHERE id = ?", (current_user.id,))
+        flash('Success! Your rolling monthly premium LevelSet subscription is now active.', 'success')
+    elif plan_type.startswith('ppr_'):
+        # Parse out the target report ID and toggle its independent payment marker flag to 1
+        parts = plan_type.split('_')
+        report_id = parts[1] if len(parts) > 1 else '0'
+        conn.execute('UPDATE reports SET paid = 1 WHERE id = ? AND user_id = ?', (report_id, current_user.id))
+        flash('Success! Your Premium Consultative Analysis Report has been fully unlocked.', 'success')
+    
     conn.commit()
     conn.close()
-    flash('Sandbox Simulation: Monthly recurring subscription successfully activated!', 'success')
-    return redirect(url_for('dashboard'), 303)
+    return redirect(url_for('dashboard'))
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
