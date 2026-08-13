@@ -1,5 +1,6 @@
 import os
 import json
+import secrets
 import stripe
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
@@ -410,72 +411,223 @@ def logout():
 # Configure your secure connection keys using the tokens saved on your desktop
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "fallback_key_here")
 
+STRIPE_CURRENCY = 'usd'
+STRIPE_AMOUNT_CENTS = 4900
+STRIPE_CHECKOUT_TOKEN_SALT = 'levelset-stripe-checkout-v1'
+STRIPE_PRODUCT_REPORT = 'levelset_premium_report'
+STRIPE_PRODUCT_SUBSCRIPTION = 'levelset_monthly_subscription'
+
+
+def _stripe_value(value, key, default=None):
+    """Read either a StripeObject or a dict (also convenient for offline tests)."""
+    if isinstance(value, dict):
+        return value.get(key, default)
+    return getattr(value, key, default)
+
+
+def _checkout_token(payload):
+    """Create a signed, short-lived binding for the intended LevelSet entitlement."""
+    payload = dict(payload)
+    payload['nonce'] = secrets.token_urlsafe(16)
+    return serializer.dumps(payload, salt=STRIPE_CHECKOUT_TOKEN_SALT)
+
+
+def _load_checkout_token(token):
+    try:
+        return serializer.loads(token, salt=STRIPE_CHECKOUT_TOKEN_SALT, max_age=3600)
+    except Exception:
+        return None
+
+
+def _checkout_metadata(product_marker, purchase_type, report_id=None):
+    metadata = {
+        'levelset_product': product_marker,
+        'levelset_purchase_type': purchase_type,
+        'levelset_user_id': str(current_user.id),
+        'levelset_amount_cents': str(STRIPE_AMOUNT_CENTS),
+        'levelset_currency': STRIPE_CURRENCY,
+    }
+    if report_id is not None:
+        metadata['levelset_report_id'] = str(report_id)
+    return metadata
+
+
+def _valid_checkout_session(checkout_session, token_payload, expected_metadata, expected_mode):
+    """Validate Stripe's server-side Checkout object before granting an entitlement."""
+    session_metadata = _stripe_value(checkout_session, 'metadata', {}) or {}
+    if dict(session_metadata) != expected_metadata:
+        return False
+
+    if _stripe_value(checkout_session, 'client_reference_id') is None:
+        return False
+    if _load_checkout_token(_stripe_value(checkout_session, 'client_reference_id')) != token_payload:
+        return False
+    if _stripe_value(checkout_session, 'mode') != expected_mode:
+        return False
+    if _stripe_value(checkout_session, 'status') != 'complete':
+        return False
+    if str(_stripe_value(checkout_session, 'currency', '')).lower() != STRIPE_CURRENCY:
+        return False
+    try:
+        if int(_stripe_value(checkout_session, 'amount_total')) != STRIPE_AMOUNT_CENTS:
+            return False
+    except (TypeError, ValueError):
+        return False
+    return _stripe_value(checkout_session, 'payment_status') == 'paid'
+
+
 @app.route('/create-checkout-session/<string:plan_type>')
 @login_required
 def create_checkout_session(plan_type):
-    """Generates a secure Stripe Checkout Session and redirects the client to Stripe's canvas."""
-    try:
-        # Determine the price details and pass matching payment intents
-        if plan_type == 'subscription':
-            # Recurring Monthly Membership Mode
-            price_item = {
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': 'LevelSet Monthly Subscription — Unlimited Access'},
-                    'unit_amount': 4900,  # $49.00 in cents
-                    'recurring': {'interval': 'month'},
-                },
-                'quantity': 1,
-            }
-            mode = 'subscription'
-            success_endpoint = url_for('stripe_success', plan_type='subscription', _external=True)
-        else:
-            # Single Pay-Per-Report Unlock Mode
-            report_id = request.args.get('report_id', '0')
-            price_item = {
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': f'LevelSet Premium Report Unlock (ID #{report_id})'},
-                    'unit_amount': 4900,  # $49.00 in cents
-                },
-                'quantity': 1,
-            }
-            mode = 'payment'
-            success_endpoint = url_for('stripe_success', plan_type=f'ppr_{report_id}', _external=True)
+    """Create a Checkout Session bound to one signed LevelSet entitlement."""
+    report_id = None
+    if plan_type == 'subscription':
+        purchase_type = 'subscription'
+        product_marker = STRIPE_PRODUCT_SUBSCRIPTION
+        mode = 'subscription'
+    elif plan_type == 'ppr':
+        report_id = request.args.get('report_id', type=int)
+        if not report_id:
+            flash('Select a valid report before starting checkout.', 'error')
+            return redirect(url_for('dashboard'))
 
-        # Build the official Stripe security session packet
+        conn = get_db()
+        report = conn.execute(
+            'SELECT id, paid FROM reports WHERE id = ? AND user_id = ?',
+            (report_id, current_user.id)
+        ).fetchone()
+        conn.close()
+        if not report:
+            flash('Report not found.', 'error')
+            return redirect(url_for('dashboard'))
+        if report['paid'] == 1:
+            return redirect(url_for('report_result', report_id=report_id))
+
+        purchase_type = 'report'
+        product_marker = STRIPE_PRODUCT_REPORT
+        mode = 'payment'
+    else:
+        flash('Invalid checkout option.', 'error')
+        return redirect(url_for('pricing'))
+
+    token_payload = {
+        'user_id': str(current_user.id),
+        'purchase_type': purchase_type,
+        'report_id': str(report_id) if report_id is not None else None,
+    }
+    client_reference_id = _checkout_token(token_payload)
+    metadata = _checkout_metadata(product_marker, purchase_type, report_id)
+    product_data = {
+        'name': (
+            'LevelSet Monthly Subscription — Unlimited Access'
+            if purchase_type == 'subscription'
+            else f'LevelSet Premium Report Unlock (ID #{report_id})'
+        ),
+        'metadata': {'levelset_product': product_marker},
+    }
+    price_data = {
+        'currency': STRIPE_CURRENCY,
+        'product_data': product_data,
+        'unit_amount': STRIPE_AMOUNT_CENTS,
+    }
+    if purchase_type == 'subscription':
+        price_data['recurring'] = {'interval': 'month'}
+
+    success_endpoint = url_for(
+        'stripe_success',
+        plan_type='subscription' if purchase_type == 'subscription' else f'ppr_{report_id}',
+        _external=True
+    )
+    success_url = f'{success_endpoint}?session_id={{CHECKOUT_SESSION_ID}}'
+
+    try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             allow_promotion_codes=True,
-            line_items=[price_item],
+            line_items=[{'price_data': price_data, 'quantity': 1}],
             mode=mode,
-            success_url=success_endpoint,
+            success_url=success_url,
             cancel_url=url_for('pricing', _external=True),
+            client_reference_id=client_reference_id,
+            metadata=metadata,
         )
         return redirect(checkout_session.url, code=303)
-
-    except Exception as e:
-        flash('Payment system on temporary standby. Please contact executive support.', 'error')
+    except Exception:
+        flash('Payment system is temporarily unavailable. No access was changed.', 'error')
         return redirect(url_for('pricing'))
+
 
 @app.route('/stripe-success/<string:plan_type>')
 @login_required
 def stripe_success(plan_type):
-    """Processes verified transaction completion data tokens securely to unlock access privileges."""
-    conn = get_db()
-    if plan_type == 'subscription':
-        # Instantly elevate their profile row to full rolling monthly member tiers
+    """Verify Stripe's Checkout Session server-side before granting access."""
+    checkout_session_id = request.args.get('session_id')
+    if not checkout_session_id:
+        flash('Payment could not be verified. No access was changed.', 'error')
+        return redirect(url_for('dashboard'))
+
+    try:
+        checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
+    except Exception:
+        flash('Payment could not be verified. No access was changed.', 'error')
+        return redirect(url_for('dashboard'))
+
+    client_reference_id = _stripe_value(checkout_session, 'client_reference_id')
+    token_payload = _load_checkout_token(client_reference_id) if client_reference_id else None
+    if not token_payload or token_payload.get('user_id') != str(current_user.id):
+        flash('Payment could not be verified. No access was changed.', 'error')
+        return redirect(url_for('dashboard'))
+
+    purchase_type = token_payload.get('purchase_type')
+    report_id = token_payload.get('report_id')
+    if purchase_type == 'subscription':
+        if plan_type != 'subscription' or report_id is not None:
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+        expected_metadata = _checkout_metadata(STRIPE_PRODUCT_SUBSCRIPTION, 'subscription')
+        if not _valid_checkout_session(checkout_session, token_payload, expected_metadata, 'subscription'):
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+
+        subscription_id = _stripe_value(checkout_session, 'subscription')
+        if not subscription_id:
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+        except Exception:
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+        if _stripe_value(subscription, 'status') != 'active':
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+
+        conn = get_db()
         conn.execute("UPDATE users SET plan = 'subscription' WHERE id = ?", (current_user.id,))
+        conn.commit()
+        conn.close()
+        current_user.plan = 'subscription'
         flash('Success! Your rolling monthly premium LevelSet subscription is now active.', 'success')
-    elif plan_type.startswith('ppr_'):
-        # Parse out the target report ID and toggle its independent payment marker flag to 1
-        parts = plan_type.split('_')
-        report_id = parts[1] if len(parts) > 1 else '0'
-        conn.execute('UPDATE reports SET paid = 1 WHERE id = ? AND user_id = ?', (report_id, current_user.id))
+    elif purchase_type == 'report' and report_id and plan_type == f'ppr_{report_id}':
+        expected_metadata = _checkout_metadata(STRIPE_PRODUCT_REPORT, 'report', report_id)
+        if not _valid_checkout_session(checkout_session, token_payload, expected_metadata, 'payment'):
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
+
+        conn = get_db()
+        updated = conn.execute(
+            'UPDATE reports SET paid = 1, payment_id = ? WHERE id = ? AND user_id = ?',
+            (_stripe_value(checkout_session, 'id', checkout_session_id), report_id, current_user.id)
+        )
+        conn.commit()
+        conn.close()
+        if updated.rowcount != 1:
+            flash('Payment could not be verified. No access was changed.', 'error')
+            return redirect(url_for('dashboard'))
         flash('Success! Your Premium Consultative Analysis Report has been fully unlocked.', 'success')
-    
-    conn.commit()
-    conn.close()
+    else:
+        flash('Payment could not be verified. No access was changed.', 'error')
+
     return redirect(url_for('dashboard'))
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -1002,13 +1154,13 @@ def manage_subscription():
 @app.route('/cancel-subscription', methods=['POST'])
 @login_required
 def cancel_subscription():
-    conn = get_db()
-    conn.execute('UPDATE users SET plan = ? WHERE id = ?', ('free', current_user.id))
-    conn.commit()
-    conn.close()
-    current_user.plan = 'free'
-    flash('Subscription cancelled. You\'ve been moved to the free plan.', 'info')
-    return redirect(url_for('dashboard'), 303)
+    # The current schema does not retain Stripe's subscription or customer IDs.
+    # Do not mark a user free locally when Stripe billing may still be active.
+    flash(
+        'We could not verify or cancel the provider subscription, so your LevelSet access was not changed.',
+        'error'
+    )
+    return redirect(url_for('manage_subscription'), 303)
 
 @app.route('/upgrade', methods=['POST'])
 @login_required
