@@ -461,13 +461,14 @@ def _stripe_metadata_dict(metadata):
     """Safely normalize Stripe SDK metadata without iterating StripeObject directly."""
     if isinstance(metadata, dict):
         return dict(metadata)
-    to_dict_recursive = getattr(metadata, 'to_dict_recursive', None)
-    if callable(to_dict_recursive):
-        try:
-            value = to_dict_recursive()
-        except Exception:
-            return None
-        return dict(value) if isinstance(value, dict) else None
+    for method_name in ('to_dict', 'to_dict_recursive'):
+        convert = getattr(metadata, method_name, None)
+        if callable(convert):
+            try:
+                value = convert()
+            except Exception:
+                return None
+            return dict(value) if isinstance(value, dict) else None
     return None
 
 

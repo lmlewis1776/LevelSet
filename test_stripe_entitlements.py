@@ -44,14 +44,14 @@ import app as levelset
 
 
 class StripeObjectLikeMetadata:
-    """Mimics the StripeObject behavior that raises when passed to dict()."""
+    """Mimics production StripeObject metadata: dict() fails, to_dict() succeeds."""
     def __init__(self, values):
         self.values = values
 
     def __iter__(self):
         raise KeyError(0)
 
-    def to_dict_recursive(self):
+    def to_dict(self):
         return dict(self.values)
 
 
