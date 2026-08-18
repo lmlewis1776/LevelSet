@@ -43,6 +43,18 @@ except ModuleNotFoundError:
 import app as levelset
 
 
+class StripeObjectLikeMetadata:
+    """Mimics the StripeObject behavior that raises when passed to dict()."""
+    def __init__(self, values):
+        self.values = values
+
+    def __iter__(self):
+        raise KeyError(0)
+
+    def to_dict_recursive(self):
+        return dict(self.values)
+
+
 class StripeCheckoutEntitlementTests(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -215,6 +227,19 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
 
         with patch.object(levelset.stripe.checkout.Session, 'retrieve', return_value=provider_session):
             response = self.client.get('/stripe-success/ppr_1?session_id=cs_offline_verified')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self._report_paid(), 1)
+
+    def test_stripeobject_metadata_is_normalized_before_entitlement_verification(self):
+        checkout_args = self._start_checkout('ppr')
+        provider_session = self._provider_session(
+            checkout_args,
+            metadata=StripeObjectLikeMetadata(checkout_args['metadata']),
+        )
+
+        with patch.object(levelset.stripe.checkout.Session, 'retrieve', return_value=provider_session):
+            response = self.client.get('/stripe-success/ppr_1?session_id=cs_stripeobject_metadata')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self._report_paid(), 1)
