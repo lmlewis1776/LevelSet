@@ -202,6 +202,13 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         self.assertEqual(payload['report_id'], '1')
         self.assertEqual(payload['purchase_type'], 'report')
 
+    def test_checkout_uses_authenticated_user_email_for_report_and_subscription(self):
+        report_checkout = self._start_checkout('ppr')
+        subscription_checkout = self._start_checkout('subscription')
+
+        self.assertEqual(report_checkout['customer_email'], 'owner@example.test')
+        self.assertEqual(subscription_checkout['customer_email'], 'owner@example.test')
+
     def test_verified_paid_report_session_unlocks_only_bound_report(self):
         checkout_args = self._start_checkout('ppr')
         provider_session = self._provider_session(checkout_args)

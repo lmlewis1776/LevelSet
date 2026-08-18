@@ -580,6 +580,7 @@ def create_checkout_session(plan_type):
             mode=mode,
             success_url=success_url,
             cancel_url=url_for('pricing', _external=True),
+            customer_email=current_user.email,
             client_reference_id=client_reference_id,
             metadata=metadata,
         )
