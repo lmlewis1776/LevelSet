@@ -133,6 +133,11 @@ class User(UserMixin):
         self.role = role
         self.plan = plan
 
+
+def has_subscription_product_access(user):
+    """Product entitlement only; this does not change Stripe or billing state."""
+    return getattr(user, 'role', None) == 'admin' or getattr(user, 'plan', None) == 'subscription'
+
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db()
@@ -1051,13 +1056,13 @@ def report_result(report_id):
         flash('Report not found', 'error')
         return redirect(url_for('dashboard'), 303)
         
-    # Check if this specific report was paid for or if the user is a subscriber
-    is_paid = report['paid'] == 1 or current_user.plan == 'subscription'
+    # A verified subscription and the existing Admin role both grant product access.
+    # The Admin override is role-based only and never changes billing state.
+    is_paid = report['paid'] == 1 or has_subscription_product_access(current_user)
     conn.close()
     
-    # Staff Override: bypass paywalls so both the consultant and assistants see 
-    # all charts, scores, and the full premium consultative prose evaluation.
-    if current_user.role in ['admin', 'moderator']:
+    # Moderators retain their existing staff-only report-review override.
+    if current_user.role == 'moderator':
         is_paid = True
         is_report_unlocked = True
     else:
