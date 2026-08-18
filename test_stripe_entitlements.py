@@ -135,6 +135,7 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
             'mode': checkout_args['mode'],
             'status': 'complete',
             'currency': 'usd',
+            'amount_subtotal': 4900,
             'amount_total': 4900,
             'payment_status': 'paid',
         }
@@ -210,6 +211,54 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self._report_paid(), 1)
+
+    def test_verified_full_discount_report_session_unlocks_report(self):
+        checkout_args = self._start_checkout('ppr')
+        discounted_session = self._provider_session(
+            checkout_args,
+            amount_total=0,
+            payment_status='no_payment_required',
+            total_details={'amount_discount': 4900},
+        )
+
+        with patch.object(levelset.stripe.checkout.Session, 'retrieve', return_value=discounted_session):
+            response = self.client.get('/stripe-success/ppr_1?session_id=cs_discounted_verified')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self._report_paid(), 1)
+
+    def test_invalid_or_incomplete_zero_total_session_does_not_unlock_report(self):
+        checkout_args = self._start_checkout('ppr')
+        invalid_sessions = [
+            self._provider_session(
+                checkout_args,
+                amount_total=0,
+                payment_status='no_payment_required',
+                total_details={'amount_discount': 0},
+            ),
+            self._provider_session(
+                checkout_args,
+                amount_total=0,
+                status='open',
+                payment_status='no_payment_required',
+                total_details={'amount_discount': 4900},
+            ),
+            self._provider_session(
+                checkout_args,
+                amount_total=0,
+                payment_status='no_payment_required',
+                total_details={'amount_discount': 4900},
+                metadata={**checkout_args['metadata'], 'levelset_product': 'unverified_product'},
+            ),
+        ]
+
+        for index, provider_session in enumerate(invalid_sessions):
+            with self.subTest(case=index), patch.object(
+                levelset.stripe.checkout.Session, 'retrieve', return_value=provider_session
+            ):
+                response = self.client.get('/stripe-success/ppr_1?session_id=cs_zero_invalid')
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(self._report_paid(), 0)
 
     def test_missing_unpaid_wrong_mode_or_wrong_product_session_does_not_unlock_report(self):
         with patch.object(levelset.stripe.checkout.Session, 'retrieve') as retrieve:
