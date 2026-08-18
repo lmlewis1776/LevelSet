@@ -67,7 +67,7 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         conn.execute(
             "INSERT INTO reports (id, user_id, report_type, title, data, score, max_score, paid) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (1, 1, 'tech_assessment', 'Owner report', '{}', 1, 1, 0)
+            (1, 1, 'tech_assessment', 'Owner report', '{"overall_pct": 50}', 1, 1, 0)
         )
         conn.commit()
         conn.close()
@@ -104,6 +104,17 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         conn.close()
         return row
 
+    def _payment_count(self, user_id=1):
+        conn = levelset.get_db()
+        count = conn.execute('SELECT COUNT(*) AS count FROM payments WHERE user_id = ?', (user_id,)).fetchone()['count']
+        conn.close()
+        return count
+
+    def _report_contains_premium_analysis(self):
+        response = self.client.get('/report/1')
+        self.assertEqual(response.status_code, 200)
+        return 'Based on our exhaustive system diagnostics' in response.get_data(as_text=True)
+
     def _start_checkout(self, checkout_type):
         with patch.object(
             levelset.stripe.checkout.Session,
@@ -129,6 +140,44 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         }
         session.update(overrides)
         return session
+
+    def test_admin_role_grants_premium_product_access_without_billing_records(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET role = 'admin', plan = 'free' WHERE id = 1")
+        conn.commit()
+        conn.close()
+
+        self.assertTrue(self._report_contains_premium_analysis())
+        self.assertEqual(self._plan(), 'free')
+        self.assertEqual(self._payment_count(), 0)
+
+    def test_free_user_does_not_receive_premium_product_access(self):
+        self.assertFalse(self._report_contains_premium_analysis())
+        self.assertEqual(self._payment_count(), 0)
+
+    def test_active_subscriber_retains_premium_product_access(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET plan = 'subscription' WHERE id = 1")
+        conn.commit()
+        conn.close()
+
+        self.assertTrue(self._report_contains_premium_analysis())
+        self.assertEqual(self._payment_count(), 0)
+
+    def test_admin_access_survives_subscription_state_changes(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET role = 'admin', plan = 'subscription' WHERE id = 1")
+        conn.commit()
+        conn.close()
+
+        # Simulate a later billing-state change without altering the Admin role.
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET plan = 'free' WHERE id = 1")
+        conn.commit()
+        conn.close()
+
+        self.assertTrue(self._report_contains_premium_analysis())
+        self.assertEqual(self._payment_count(), 0)
 
     def test_report_checkout_binds_signed_user_report_and_price_metadata(self):
         checkout_args = self._start_checkout('ppr')
