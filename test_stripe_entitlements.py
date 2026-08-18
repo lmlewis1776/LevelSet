@@ -32,6 +32,10 @@ except ModuleNotFoundError:
         def retrieve(*args, **kwargs):
             raise AssertionError('Stripe must be mocked in offline tests')
 
+        @staticmethod
+        def cancel(*args, **kwargs):
+            raise AssertionError('Stripe must be mocked in offline tests')
+
     stripe.checkout = types.SimpleNamespace(Session=OfflineCheckoutSession)
     stripe.Subscription = OfflineSubscription
     sys.modules['stripe'] = stripe
@@ -88,6 +92,17 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         row = conn.execute('SELECT plan FROM users WHERE id = 1').fetchone()
         conn.close()
         return row['plan']
+
+    def _subscription_record(self, user_id=1):
+        conn = levelset.get_db()
+        row = conn.execute(
+            '''SELECT id, payment_id, status FROM payments
+               WHERE user_id = ? AND report_id IS NULL
+               ORDER BY id DESC LIMIT 1''',
+            (user_id,)
+        ).fetchone()
+        conn.close()
+        return row
 
     def _start_checkout(self, checkout_type):
         with patch.object(
@@ -195,6 +210,9 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self._plan(), 'subscription')
+        record = self._subscription_record()
+        self.assertEqual(record['payment_id'], 'sub_offline_active')
+        self.assertEqual(record['status'], 'subscription_active')
 
     def test_inactive_subscription_never_sets_plan(self):
         checkout_args = self._start_checkout('subscription')
@@ -208,6 +226,45 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self._plan(), 'free')
 
+    def test_cancelled_provider_subscription_downgrades_only_after_confirmation(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET plan = 'subscription' WHERE id = 1")
+        conn.execute(
+            "INSERT INTO payments (user_id, amount, payment_id, status) VALUES (?, ?, ?, ?)",
+            (1, 49.00, 'sub_offline_active', 'subscription_active')
+        )
+        conn.commit()
+        conn.close()
+
+        with patch.object(
+            levelset.stripe.Subscription,
+            'cancel',
+            return_value={'id': 'sub_offline_active', 'status': 'canceled'}
+        ) as cancel:
+            response = self.client.post('/cancel-subscription')
+
+        self.assertEqual(response.status_code, 303)
+        cancel.assert_called_once_with('sub_offline_active')
+        self.assertEqual(self._plan(), 'free')
+        self.assertEqual(self._subscription_record()['status'], 'subscription_cancelled')
+
+    def test_cancel_stripe_failure_does_not_downgrade_access(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET plan = 'subscription' WHERE id = 1")
+        conn.execute(
+            "INSERT INTO payments (user_id, amount, payment_id, status) VALUES (?, ?, ?, ?)",
+            (1, 49.00, 'sub_offline_failure', 'subscription_active')
+        )
+        conn.commit()
+        conn.close()
+
+        with patch.object(levelset.stripe.Subscription, 'cancel', side_effect=RuntimeError('offline failure')):
+            response = self.client.post('/cancel-subscription')
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(self._plan(), 'subscription')
+        self.assertEqual(self._subscription_record()['status'], 'subscription_active')
+
     def test_cancel_does_not_downgrade_without_a_stored_stripe_provider_identifier(self):
         conn = levelset.get_db()
         conn.execute("UPDATE users SET plan = 'subscription' WHERE id = 1")
@@ -218,6 +275,24 @@ class StripeCheckoutEntitlementTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 303)
         self.assertEqual(self._plan(), 'subscription')
+
+    def test_user_cannot_cancel_another_users_stored_subscription(self):
+        conn = levelset.get_db()
+        conn.execute("UPDATE users SET plan = 'subscription' WHERE id = 1")
+        conn.execute(
+            "INSERT INTO payments (user_id, amount, payment_id, status) VALUES (?, ?, ?, ?)",
+            (2, 49.00, 'sub_other_user', 'subscription_active')
+        )
+        conn.commit()
+        conn.close()
+
+        with patch.object(levelset.stripe.Subscription, 'cancel') as cancel:
+            response = self.client.post('/cancel-subscription')
+
+        self.assertEqual(response.status_code, 303)
+        cancel.assert_not_called()
+        self.assertEqual(self._plan(), 'subscription')
+        self.assertEqual(self._subscription_record(user_id=2)['status'], 'subscription_active')
 
 
 if __name__ == '__main__':

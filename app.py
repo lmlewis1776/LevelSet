@@ -476,6 +476,14 @@ def _valid_checkout_session(checkout_session, token_payload, expected_metadata, 
     return _stripe_value(checkout_session, 'payment_status') == 'paid'
 
 
+def _cancel_provider_subscription(subscription_id):
+    """Cancel a Stripe subscription using the SDK method available at runtime."""
+    cancel = getattr(stripe.Subscription, 'cancel', None)
+    if cancel:
+        return cancel(subscription_id)
+    return stripe.Subscription.delete(subscription_id)
+
+
 @app.route('/create-checkout-session/<string:plan_type>')
 @login_required
 def create_checkout_session(plan_type):
@@ -604,6 +612,25 @@ def stripe_success(plan_type):
 
         conn = get_db()
         conn.execute("UPDATE users SET plan = 'subscription' WHERE id = ?", (current_user.id,))
+        # The existing payments table safely records the provider subscription ID for
+        # future provider-side cancellation; no schema migration is needed.
+        conn.execute(
+            '''INSERT INTO payments (user_id, amount, payment_id, status)
+               SELECT ?, ?, ?, ?
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM payments
+                   WHERE user_id = ? AND report_id IS NULL AND payment_id = ?
+                     AND status = 'subscription_active'
+               )''',
+            (
+                current_user.id,
+                STRIPE_AMOUNT_CENTS / 100,
+                subscription_id,
+                'subscription_active',
+                current_user.id,
+                subscription_id,
+            )
+        )
         conn.commit()
         conn.close()
         current_user.plan = 'subscription'
@@ -1154,13 +1181,49 @@ def manage_subscription():
 @app.route('/cancel-subscription', methods=['POST'])
 @login_required
 def cancel_subscription():
-    # The current schema does not retain Stripe's subscription or customer IDs.
-    # Do not mark a user free locally when Stripe billing may still be active.
-    flash(
-        'We could not verify or cancel the provider subscription, so your LevelSet access was not changed.',
-        'error'
+    conn = get_db()
+    subscription_record = conn.execute(
+        '''SELECT id, payment_id FROM payments
+           WHERE user_id = ? AND report_id IS NULL AND status = 'subscription_active'
+           ORDER BY id DESC LIMIT 1''',
+        (current_user.id,)
+    ).fetchone()
+    conn.close()
+
+    if not subscription_record:
+        flash(
+            'We could not identify a Stripe subscription to cancel, so your LevelSet access was not changed.',
+            'error'
+        )
+        return redirect(url_for('manage_subscription'), 303)
+
+    try:
+        cancelled_subscription = _cancel_provider_subscription(subscription_record['payment_id'])
+    except Exception:
+        flash(
+            'Stripe could not confirm cancellation, so your LevelSet access was not changed.',
+            'error'
+        )
+        return redirect(url_for('manage_subscription'), 303)
+
+    if _stripe_value(cancelled_subscription, 'status') != 'canceled':
+        flash(
+            'Stripe did not confirm cancellation, so your LevelSet access was not changed.',
+            'error'
+        )
+        return redirect(url_for('manage_subscription'), 303)
+
+    conn = get_db()
+    conn.execute(
+        "UPDATE payments SET status = 'subscription_cancelled' WHERE id = ? AND user_id = ?",
+        (subscription_record['id'], current_user.id)
     )
-    return redirect(url_for('manage_subscription'), 303)
+    conn.execute("UPDATE users SET plan = 'free' WHERE id = ?", (current_user.id,))
+    conn.commit()
+    conn.close()
+    current_user.plan = 'free'
+    flash('Your Stripe subscription has been cancelled.', 'success')
+    return redirect(url_for('dashboard'), 303)
 
 @app.route('/upgrade', methods=['POST'])
 @login_required
