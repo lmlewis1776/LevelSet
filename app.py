@@ -474,11 +474,30 @@ def _valid_checkout_session(checkout_session, token_payload, expected_metadata, 
     if str(_stripe_value(checkout_session, 'currency', '')).lower() != STRIPE_CURRENCY:
         return False
     try:
-        if int(_stripe_value(checkout_session, 'amount_total')) != STRIPE_AMOUNT_CENTS:
-            return False
+        amount_subtotal = int(_stripe_value(checkout_session, 'amount_subtotal'))
+        amount_total = int(_stripe_value(checkout_session, 'amount_total'))
     except (TypeError, ValueError):
         return False
-    return _stripe_value(checkout_session, 'payment_status') == 'paid'
+
+    # The LevelSet product price remains $49. A normal paid Checkout Session has
+    # that final total; a fully discounted session must still show the same
+    # pre-discount subtotal and an equivalent Stripe-recorded discount.
+    if amount_subtotal != STRIPE_AMOUNT_CENTS:
+        return False
+    if amount_total == STRIPE_AMOUNT_CENTS:
+        return _stripe_value(checkout_session, 'payment_status') == 'paid'
+    if amount_total != 0:
+        return False
+
+    total_details = _stripe_value(checkout_session, 'total_details', {}) or {}
+    try:
+        amount_discount = int(_stripe_value(total_details, 'amount_discount'))
+    except (TypeError, ValueError):
+        return False
+    return (
+        amount_discount == STRIPE_AMOUNT_CENTS
+        and _stripe_value(checkout_session, 'payment_status') in ('paid', 'no_payment_required')
+    )
 
 
 def _cancel_provider_subscription(subscription_id):
