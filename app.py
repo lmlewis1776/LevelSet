@@ -457,10 +457,24 @@ def _checkout_metadata(product_marker, purchase_type, report_id=None):
     return metadata
 
 
+def _stripe_metadata_dict(metadata):
+    """Safely normalize Stripe SDK metadata without iterating StripeObject directly."""
+    if isinstance(metadata, dict):
+        return dict(metadata)
+    to_dict_recursive = getattr(metadata, 'to_dict_recursive', None)
+    if callable(to_dict_recursive):
+        try:
+            value = to_dict_recursive()
+        except Exception:
+            return None
+        return dict(value) if isinstance(value, dict) else None
+    return None
+
+
 def _valid_checkout_session(checkout_session, token_payload, expected_metadata, expected_mode):
     """Validate Stripe's server-side Checkout object before granting an entitlement."""
-    session_metadata = _stripe_value(checkout_session, 'metadata', {}) or {}
-    if dict(session_metadata) != expected_metadata:
+    session_metadata = _stripe_metadata_dict(_stripe_value(checkout_session, 'metadata', {}))
+    if session_metadata != expected_metadata:
         return False
 
     if _stripe_value(checkout_session, 'client_reference_id') is None:
