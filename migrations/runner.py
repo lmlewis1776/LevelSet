@@ -11,21 +11,29 @@ MIGRATIONS = (
 
 
 def run_migrations(conn):
-    conn.execute(
-        '''CREATE TABLE IF NOT EXISTS schema_migrations (
-            version INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )'''
-    )
-    applied_versions = {
-        row[0] for row in conn.execute('SELECT version FROM schema_migrations').fetchall()
-    }
-    for version, name, apply_migration in MIGRATIONS:
-        if version in applied_versions:
-            continue
-        apply_migration(conn)
+    """Serialize pending SQLite migrations across concurrent application workers."""
+    conn.execute('PRAGMA busy_timeout = 30000')
+    conn.execute('BEGIN IMMEDIATE')
+    try:
         conn.execute(
-            'INSERT INTO schema_migrations (version, name) VALUES (?, ?)',
-            (version, name),
+            '''CREATE TABLE IF NOT EXISTS schema_migrations (
+                version INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )'''
         )
+        applied_versions = {
+            row[0] for row in conn.execute('SELECT version FROM schema_migrations').fetchall()
+        }
+        for version, name, apply_migration in MIGRATIONS:
+            if version in applied_versions:
+                continue
+            apply_migration(conn)
+            conn.execute(
+                'INSERT INTO schema_migrations (version, name) VALUES (?, ?)',
+                (version, name),
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise

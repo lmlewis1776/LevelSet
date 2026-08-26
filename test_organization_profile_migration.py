@@ -9,8 +9,11 @@ import os
 import sqlite3
 import sys
 import tempfile
+import threading
+import time
 import types
 import unittest
+from unittest.mock import patch
 
 # Keep imports offline when the Stripe SDK is absent in the local test environment.
 try:
@@ -41,6 +44,7 @@ except ModuleNotFoundError:
     sys.modules['stripe'] = stripe
 
 import app as levelset
+from migrations import runner as migration_runner
 from organization_data import (
     create_organization,
     create_user_organization,
@@ -248,6 +252,67 @@ class OrganizationProfileMigrationTests(unittest.TestCase):
         other_response = self.client.get('/report/1')
         self.assertEqual(other_response.status_code, 303)
         self.assertIn('/dashboard', other_response.headers['Location'])
+
+    def test_concurrent_migration_initialization_applies_a_version_once(self):
+        race_path = os.path.join(self.tmpdir.name, 'migration-race.db')
+        barrier = threading.Barrier(2)
+        errors = []
+
+        def apply_probe(conn):
+            conn.execute('CREATE TABLE IF NOT EXISTS migration_probe (run_count INTEGER NOT NULL)')
+            conn.execute('INSERT INTO migration_probe (run_count) VALUES (1)')
+            time.sleep(0.15)
+
+        def initialize():
+            conn = sqlite3.connect(race_path, timeout=5)
+            try:
+                barrier.wait()
+                migration_runner.run_migrations(conn)
+            except Exception as error:
+                errors.append(error)
+            finally:
+                conn.close()
+
+        test_migrations = ((999, 'concurrent_probe', apply_probe),)
+        with patch.object(migration_runner, 'MIGRATIONS', test_migrations):
+            first = threading.Thread(target=initialize)
+            second = threading.Thread(target=initialize)
+            first.start()
+            second.start()
+            first.join()
+            second.join()
+
+        self.assertEqual(errors, [])
+        conn = sqlite3.connect(race_path)
+        applied = conn.execute('SELECT COUNT(*) FROM schema_migrations WHERE version = 999').fetchone()[0]
+        probe_runs = conn.execute('SELECT COUNT(*) FROM migration_probe').fetchone()[0]
+        conn.close()
+        self.assertEqual(applied, 1)
+        self.assertEqual(probe_runs, 1)
+
+    def test_failed_migration_is_not_recorded_as_applied(self):
+        failed_path = os.path.join(self.tmpdir.name, 'migration-failure.db')
+
+        def fail_migration(conn):
+            conn.execute('CREATE TABLE should_rollback (id INTEGER)')
+            raise RuntimeError('intentional migration failure')
+
+        with patch.object(migration_runner, 'MIGRATIONS', ((1000, 'failing_probe', fail_migration),)):
+            conn = sqlite3.connect(failed_path)
+            with self.assertRaisesRegex(RuntimeError, 'intentional migration failure'):
+                migration_runner.run_migrations(conn)
+            conn.close()
+
+        conn = sqlite3.connect(failed_path)
+        schema_table = conn.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'"
+        ).fetchone()[0]
+        rolled_back_table = conn.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'should_rollback'"
+        ).fetchone()[0]
+        conn.close()
+        self.assertEqual(schema_table, 0)
+        self.assertEqual(rolled_back_table, 0)
 
 
 if __name__ == '__main__':
