@@ -10,6 +10,7 @@ from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from functools import wraps
+from migrations.runner import run_migrations
 
 app = Flask(__name__)
 
@@ -112,6 +113,8 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    run_migrations(conn)
     
     conn.commit()
     conn.close()
